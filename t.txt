@@ -1,0 +1,969 @@
+  // SECTION 1: USER PROFILE (From Code Set 2)
+
+  // =========================================================
+
+  "personal_profile": {
+
+    "full_name": "Ramanathan S",
+
+    "preferred_name": ["Ram"],
+
+    "education": {
+
+      "degree": "B.Tech",
+
+      "branch": "Information Technology",
+
+      "institution": "Mohamed Sathak A.J. College of Engineering",
+
+      "current_year": "2nd Year",
+
+      "batch": "2024–2028",
+
+      "expected_cgpa_range": "7.8 – 8.8"
+
+    },
+
+    "skills_and_interests": {
+
+      "technical": [
+
+        "Web Development", "Frontend Development", "Java Basics", "React (Beginner)",
+
+        "Automation Tools (n8n, Automation Anywhere)", "AI Chatbot Development"
+
+      ],
+
+      "creative": ["Audio mixing and mashups"],
+
+      "tools_used": ["Visual Studio Code", "FL Studio", "Studio One", "Unity", "Supabase", "n8n"]
+
+    },
+
+    "projects": [
+
+      "Event Booking Management System", "SmartHostel Web App",
+
+      "AI Chatbot (current system)", "Unity Game – Haunted Village"
+
+    ],
+
+    "experience": { "internship": "Java Full Stack and RPA / Automation", "hackathons": "Participated" },
+
+    "preferences": {
+
+      "languages": ["Tamil", "English", "German (Beginner)"],
+
+      "learning_style": "Hands-on, step-by-step"
+
+    },
+
+    "hobbies": ["Studio remixing", "Exploring AI tools", "Building side projects"],
+
+    "current_focus": [
+
+      "Full-stack skill improvement", "Preparation for MSc in Germany", "Career growth"
+
+    ]
+
+  },
+
+
+
+  "chatbot_scope": {
+
+    "included": ["Engineering College Only"],
+
+    "excluded": ["Architecture College", "Nursing College"],
+
+    "supported_queries": [
+
+      "Courses offered", "Admission details", "Placement information",
+
+      "Bus routes and timings", "Result portal", "Faculty and departments", "Contact information"
+
+    ]
+
+  },
+
+
+// SECTION 7: TRANSPORT (Merged Detailed)
+
+  // =========================================================
+
+  "transportation": {
+
+    "overview": "The Institute has 22 buses, One Tata ACE, One Ambulance. Transport facility available from Chennai, Chengalpattu, Kanchipuram and Thiruvallur.",
+
+    "contact": { "name": "Dr. K.P. Santhosh Nathan", "mobile": "98408 86992" },
+
+    
+
+    // MTC Routes (From Code 1 & 2)
+
+    "public_transport_mtc": {
+
+      "stop_name": "SIPCOT / Siruseri IT Park",
+
+      "routes": [
+
+        { "routeNo": "19", "start": "T. Nagar", "end": "Thiruporur", "via": "OMR, Madhiya Kailash, SRP", "freq": "Daily" },
+
+        { "routeNo": "519", "start": "T. Nagar", "end": "Thiruporur", "via": "Saidapet, Adyar, SRP", "freq": "Daily" },
+
+        { "routeNo": "221H", "start": "Central", "end": "Thiruporur", "via": "Anna Salai, Saidapet, SRP", "freq": "Daily" },
+
+        { "routeNo": "102X", "start": "Broadway", "end": "Thiruporur", "via": "Marina, Adyar, OMR", "freq": "Daily" },
+
+        { "routeNo": "102S", "start": "Broadway", "end": "Sipcot", "via": "Marina, Adyar, OMR", "freq": "Daily" },
+
+        { "routeNo": "102", "start": "Broadway", "end": "Kelambakkam", "via": "Marina, Adyar, OMR", "freq": "Daily" },
+
+        { "routeNo": "B19", "start": "Shollinganallur", "end": "Kelambakkam", "via": "Sipcot, OMR", "freq": "Daily" },
+
+        { "routeNo": "570", "start": "CMBT", "end": "Kelambakkam", "via": "Vadapalani, Velachery, SRP", "freq": "Daily" },
+
+        { "routeNo": "570S", "start": "CMBT", "end": "Sipcot", "via": "Vadapalani, Velachery, SRP", "freq": "Daily" },
+
+        { "routeNo": "105", "start": "Tambaram", "end": "Siruseri", "via": "Thalambur", "freq": "Daily" }
+
+      ]
+
+    },
+
+
+
+    // College Bus Routes Summary (From Code 1)
+
+    "college_buses_summary": {
+
+      "total_buses": 22,
+
+      "routes": [
+
+        { "route_no": "AR 3", "start_point": "Uthiramerur", "time": "05:50 AM" },
+
+        { "route_no": "AR 4", "start_point": "Moolakadai", "time": "06:10 AM" },
+
+        { "route_no": "AR 5", "start_point": "MMDA School", "time": "06:15 AM" },
+
+        { "route_no": "AR 6", "start_point": "ICF", "time": "06:15 AM" },
+
+        { "route_no": "AR 7", "start_point": "Chunambedu", "time": "05:25 AM" },
+
+        { "route_no": "AR 8", "start_point": "Manjambakkam", "time": "05:50 AM" },
+
+        { "route_no": "AR 9", "start_point": "Ennore", "time": "06:15 AM" },
+
+        { "route_no": "AR 10", "start_point": "Porur", "time": "06:25 AM" },
+
+        { "route_no": "R 22", "start_point": "Nemilichery", "time": "06:00 AM" }
+
+      ]
+
+    },
+
+
+
+    // Detailed Routes with Drivers & Stops (From Code 2)
+
+    "transport_detailed_routes": [
+
+      {
+
+        "route_no": "AR-3",
+
+        "driver": { "name": "Mr. Sathish K", "mobile": "+91-9789970304" },
+
+        "stops": [
+
+          { "stop": "G.H Hospital", "time": "06:20" },
+
+          { "stop": "Paranur Tollgate", "time": "06:35" },
+
+          { "stop": "Mahindra City", "time": "06:40" },
+
+          { "stop": "S.P. Koil", "time": "06:45" },
+
+          { "stop": "Maraimalai Nagar", "time": "06:48" },
+
+          { "stop": "Guduvanchery", "time": "06:50" },
+
+          { "stop": "Ooraapakkam", "time": "06:52" },
+
+          { "stop": "Vandalur Zoo", "time": "06:55" },
+
+          { "stop": "Perungalathur", "time": "07:00" },
+
+          { "stop": "Kandigai", "time": "07:15" },
+
+          { "stop": "Mambakkam", "time": "07:25" },
+
+          { "stop": "Puthupakkam", "time": "07:30" },
+
+          { "stop": "Kelambakkam", "time": "07:40" },
+
+          { "stop": "SIPCOT", "time": "07:50" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "AR-4",
+
+        "driver": { "name": "Mr. M. Suresh", "mobile": "+91-9849265637" },
+
+        "stops": [
+
+          { "stop": "Moolakadai", "time": "06:10" },
+
+          { "stop": "Perambur Railway Station", "time": "06:15" },
+
+          { "stop": "Otteri Pattalam", "time": "06:18" },
+
+          { "stop": "Dowton", "time": "06:23" },
+
+          { "stop": "Vepery Police Station", "time": "06:25" },
+
+          { "stop": "Periyamed", "time": "06:30" },
+
+          { "stop": "Central", "time": "06:35" },
+
+          { "stop": "Parrys Corner", "time": "06:40" },
+
+          { "stop": "Marina Beach", "time": "06:45" },
+
+          { "stop": "Santhome", "time": "06:50" },
+
+          { "stop": "Adyar", "time": "07:00" },
+
+          { "stop": "Thiruvanmiyur", "time": "07:05" },
+
+          { "stop": "Palavakkam", "time": "07:10" },
+
+          { "stop": "Neelankarai", "time": "07:15" },
+
+          { "stop": "Akkarai Water Tank", "time": "07:20" },
+
+          { "stop": "Sholinganallur", "time": "07:25" },
+
+          { "stop": "Ladies Hostel", "time": "07:30" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "AR-5 / N-3",
+
+        "historical_note": "Originally named AR-5, later renamed as N-3. Same bus and same route.",
+
+        "driver": { "name": "Mr. Velu", "mobile": "+91-9940050685" },
+
+        "stops": [
+
+          { "stop": "MMDA School", "time": "06:15" },
+
+          { "stop": "Anna Nagar", "time": "06:20" },
+
+          { "stop": "Chinthamani", "time": "06:25" },
+
+          { "stop": "Skywalk", "time": "06:30" },
+
+          { "stop": "Choolaimadu", "time": "06:33" },
+
+          { "stop": "Loyola College", "time": "06:35" },
+
+          { "stop": "T. Nagar", "time": "06:40" },
+
+          { "stop": "CIT Nagar", "time": "06:43" },
+
+          { "stop": "Saidapet", "time": "06:45" },
+
+          { "stop": "Velachery Check Post", "time": "06:50" },
+
+          { "stop": "Vijaya Nagar Bus Stop", "time": "06:53" },
+
+          { "stop": "Baby Nagar", "time": "06:55" },
+
+          { "stop": "Tharamani", "time": "07:00" },
+
+          { "stop": "MGR Road", "time": "07:15" },
+
+          { "stop": "OMR", "time": "07:20" },
+
+          { "stop": "Ladies Hostel", "time": "07:35" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "AR-6",
+
+        "driver": { "name": "Mr. Venkatachalam", "mobile": "+91-9025731746" },
+
+        "stops": [
+
+          { "stop": "MMDA School", "time": "06:15" },
+
+          { "stop": "Anna Nagar", "time": "06:20" },
+
+          { "stop": "Chinthamani", "time": "06:25" },
+
+          { "stop": "Skywalk", "time": "06:30" },
+
+          { "stop": "Choolaimadu", "time": "06:33" },
+
+          { "stop": "Loyola College", "time": "06:35" },
+
+          { "stop": "T. Nagar", "time": "06:40" },
+
+          { "stop": "CIT Nagar", "time": "06:43" },
+
+          { "stop": "Saidapet", "time": "06:45" },
+
+          { "stop": "Velachery Check Post", "time": "06:50" },
+
+          { "stop": "Vijaya Nagar Bus Stop", "time": "06:53" },
+
+          { "stop": "Baby Nagar", "time": "06:55" },
+
+          { "stop": "Tharamani", "time": "07:00" },
+
+          { "stop": "MGR Road", "time": "07:15" },
+
+          { "stop": "OMR", "time": "07:20" },
+
+          { "stop": "Ladies Hostel", "time": "07:35" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "AR-7",
+
+        "driver": { "name": "Mr. Suresh", "mobile": "+91-9789895025" },
+
+        "stops": [
+
+          { "stop": "Chunambedu", "time": "05:25" },
+
+          { "stop": "Kadapakkam", "time": "05:45" },
+
+          { "stop": "Elliyamman Koil", "time": "06:00" },
+
+          { "stop": "Koovathur", "time": "06:17" },
+
+          { "stop": "Kathan Kadai", "time": "06:22" },
+
+          { "stop": "Kalpakkam", "time": "06:30" },
+
+          { "stop": "Caturankappattinam", "time": "06:40" },
+
+          { "stop": "Venkampakkam", "time": "06:50" },
+
+          { "stop": "Thirukazukundram", "time": "07:00" },
+
+          { "stop": "Punceri", "time": "07:12" },
+
+          { "stop": "Paiyanur", "time": "07:15" },
+
+          { "stop": "Alathur", "time": "07:20" },
+
+          { "stop": "Thirupporur", "time": "07:30" },
+
+          { "stop": "Kalavakkam", "time": "07:36" },
+
+          { "stop": "Cenkanmal", "time": "07:41" },
+
+          { "stop": "Kelambakkam", "time": "07:45" },
+
+          { "stop": "Padur", "time": "07:50" },
+
+          { "stop": "Aananth College", "time": "07:53" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "AR-8",
+
+        "driver": { "name": "Mr. Raju", "mobile": "+91-9790750906" },
+
+        "stops": [
+
+          { "stop": "Manjambakkam", "time": "05:50" },
+
+          { "stop": "Retteri", "time": "05:55" },
+
+          { "stop": "Senthil Nagar", "time": "06:00" },
+
+          { "stop": "Padi", "time": "06:05" },
+
+          { "stop": "Anna Nagar", "time": "06:10" },
+
+          { "stop": "Thirumangalam", "time": "06:12" },
+
+          { "stop": "Vijaykanth", "time": "06:15" },
+
+          { "stop": "CMBT", "time": "06:20" },
+
+          { "stop": "Vadapalani", "time": "06:25" },
+
+          { "stop": "Ashok Pillar", "time": "06:30" },
+
+          { "stop": "Kasi Theatre", "time": "06:35" },
+
+          { "stop": "Ekkattuthangal", "time": "06:40" },
+
+          { "stop": "Aadampakkam", "time": "06:50" },
+
+          { "stop": "Kaiveli", "time": "06:55" },
+
+          { "stop": "Pallikaranai", "time": "07:10" },
+
+          { "stop": "Medavakkam", "time": "07:20" },
+
+          { "stop": "Perumpakkam", "time": "07:25" },
+
+          { "stop": "Sholinganallur", "time": "07:30" },
+
+          { "stop": "Ladies Hostel", "time": "07:35" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "AR-9",
+
+        "driver": { "name": "Mr. Kanagaraj", "mobile": "+91-9710209097" },
+
+        "stops": [
+
+          { "stop": "Ennore", "time": "06:15" },
+
+          { "stop": "Mint", "time": "06:20" },
+
+          { "stop": "Broadway", "time": "06:25" },
+
+          { "stop": "Central", "time": "06:30" },
+
+          { "stop": "Omandhoorar Hospital", "time": "06:40" },
+
+          { "stop": "Royapettah", "time": "06:45" },
+
+          { "stop": "Mylapore", "time": "06:50" },
+
+          { "stop": "Santhome", "time": "07:00" },
+
+          { "stop": "Adyar", "time": "07:10" },
+
+          { "stop": "Thiruvanmiyur", "time": "07:15" },
+
+          { "stop": "Palavakkam", "time": "07:20" },
+
+          { "stop": "Neelankarai", "time": "07:25" },
+
+          { "stop": "Akkarai Water Tank", "time": "07:30" },
+
+          { "stop": "Sholinganallur", "time": "07:35" },
+
+          { "stop": "Ladies Hostel", "time": "07:40" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "R-20",
+
+        "driver": { "name": "Mr. M. Suresh", "mobile": "+91-9849265637" },
+
+        "stops": [
+
+          { "stop": "Moolakadai", "time": "05:55" },
+
+          { "stop": "Perambur Railway", "time": "06:10" },
+
+          { "stop": "Otteri Pattalam", "time": "06:15" },
+
+          { "stop": "Dowton", "time": "06:20" },
+
+          { "stop": "Central", "time": "06:25" },
+
+          { "stop": "Parrys", "time": "06:30" },
+
+          { "stop": "Omandhoorar Hospital", "time": "06:40" },
+
+          { "stop": "Royapettah", "time": "06:45" },
+
+          { "stop": "Mylapore", "time": "06:50" },
+
+          { "stop": "Santhome", "time": "07:00" },
+
+          { "stop": "Adyar", "time": "07:05" },
+
+          { "stop": "Thiruvanmiyur", "time": "07:10" },
+
+          { "stop": "Palavakkam", "time": "07:15" },
+
+          { "stop": "Neelankarai", "time": "07:20" },
+
+          { "stop": "Akkarai Water Tank", "time": "07:25" },
+
+          { "stop": "Sholinganallur", "time": "07:30" },
+
+          { "stop": "Ladies Hostel", "time": "07:35" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "R-21",
+
+        "driver": { "name": "Mr. E. Sathish", "mobile": "+91-9677007583" },
+
+        "stops": [
+
+          { "stop": "Porur", "time": "06:25" },
+
+          { "stop": "Boy Kadai", "time": "06:33" },
+
+          { "stop": "Kovoor", "time": "06:35" },
+
+          { "stop": "Kundrathur", "time": "06:38" },
+
+          { "stop": "Anagaputhur", "time": "06:40" },
+
+          { "stop": "Pammal", "time": "06:43" },
+
+          { "stop": "Pallavaram", "time": "06:45" },
+
+          { "stop": "Meenambakkam", "time": "06:48" },
+
+          { "stop": "Pallavaram", "time": "06:50" },
+
+          { "stop": "Chrompet", "time": "06:55" },
+
+          { "stop": "Tambaram W & E", "time": "07:00" },
+
+          { "stop": "Camp Road", "time": "07:05" },
+
+          { "stop": "Saliyur", "time": "07:10" },
+
+          { "stop": "Medavakkam", "time": "07:25" },
+
+          { "stop": "Chithalapakkam", "time": "07:30" },
+
+          { "stop": "Thalambur", "time": "07:35" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      },
+
+      {
+
+        "route_no": "R-22",
+
+        "driver": { "name": "Mr. Jaffar", "mobile": "+91-9566037890" },
+
+        "stops": [
+
+          { "stop": "Nemilichery", "time": "05:50" },
+
+          { "stop": "Poonamallee", "time": "06:05" },
+
+          { "stop": "Kumanan Chavadi", "time": "06:00" },
+
+          { "stop": "Kattupakkam", "time": "06:05" },
+
+          { "stop": "Ramachandra Hospital", "time": "06:10" },
+
+          { "stop": "Porur", "time": "06:15" },
+
+          { "stop": "Valasaravakkam", "time": "06:20" },
+
+          { "stop": "Ramapuram", "time": "06:25" },
+
+          { "stop": "Nandhampakkam", "time": "06:30" },
+
+          { "stop": "Kathipara Junction", "time": "06:35" },
+
+          { "stop": "Thillai Ganga Subway", "time": "06:40" },
+
+          { "stop": "Velachery Bypass", "time": "06:45" },
+
+          { "stop": "Kaiveli", "time": "07:00" },
+
+          { "stop": "Madipakkam", "time": "07:05" },
+
+          { "stop": "Kilkattalai", "time": "07:10" },
+
+          { "stop": "Kovilambakkam", "time": "07:15" },
+
+          { "stop": "Medavakkam", "time": "07:20" },
+
+          { "stop": "Sholinganallur", "time": "07:25" },
+
+          { "stop": "M.S.A.J.C.E – College", "time": "08:00" }
+
+        ]
+
+      }
+
+    ]
+
+  },
+
+1	Home	https://www.msajce-edu.in/
+2	About	https://www.msajce-edu.in/about.php
+3	Vision & Mission	https://www.msajce-edu.in/visionmission.php
+4	Our History	https://www.msajce-edu.in/ourhistory.php
+5	Group of Institutions	https://www.msajce-edu.in/groupofinstitutions.php
+6	Principal	https://www.msajce-edu.in/principal.php
+7	Admission	https://www.msajce-edu.in/admission.php
+8	Curriculum	https://www.msajce-edu.in/curriculm.php
+9	Departments	https://www.msajce-edu.in/departments.php
+10	Research	https://www.msajce-edu.in/research.php
+11	Technology Centre	https://www.msajce-edu.in/technologycentre.php
+12	Library	https://www.msajce-edu.in/library.php
+13	Hostel	https://www.msajce-edu.in/hostel.php
+14	Transport	https://www.msajce-edu.in/transport.php
+15	Sports	https://www.msajce-edu.in/sports.php
+16	Social Services	https://www.msajce-edu.in/socialservices.php
+17	Clubs & Societies	https://www.msajce-edu.in/clubssocieties.php
+18	Professional Societies	https://www.msajce-edu.in/professionalsocities.php
+19	Alumni	https://www.msajce-edu.in/alumni.php
+20	Incubation & Startup	https://www.msajce-edu.in/Incubation&Startup.php
+https://www.msajce-edu.in/civil.php
+https://www.msajce-edu.in/cse.php
+https://www.msajce-edu.in/eee.php
+https://www.msajce-edu.in/ece.php
+https://www.msajce-edu.in/mech.php
+https://www.msajce-edu.in/it.php
+https://www.msajce-edu.in/aids.php
+https://www.msajce-edu.in/csbs.php
+https://www.msajce-edu.in/cyber.php
+https://www.msajce-edu.in/aiml.php
+https://www.msajce-edu.in/ece-vlsi.php
+https://www.msajce-edu.in/ece-act.php
+https://www.msajce-edu.in/sh.php
+
+Build a complete, production-grade ingestion, structuring, normalization, and retrieval-ready data pipeline for the MSAJCE AI system.
+
+This system MUST process BOTH:
+
+1. Website links (all provided URLs)
+2. Manually provided structured data (JSON like transport routes, personal profile, etc.)
+
+The system must NOT directly store or embed raw data.
+
+It must follow a strict multi-stage pipeline:
+SCRAPE → CLEAN → FILE STORE → GLOBAL ANALYSIS → SPLIT → ALIGN → NORMALIZE → STRUCTURE → VALIDATE → CHUNK → EMBED → STORE
+
+---
+
+## CORE OBJECTIVE
+
+* Handle ALL domains (person, transport, departments, contact, general, etc.)
+* Avoid focusing on any single data type
+* Convert all data into query-efficient structure
+* Ensure zero hallucination and high accuracy
+* Work like ChatGPT/Gemini but grounded in your DB
+
+---
+
+## STEP 1 — SCRAPE ALL LINKS
+
+From all given URLs extract:
+
+* title
+* headings (h1, h2, h3)
+* paragraphs
+* tables
+* lists
+
+Remove:
+
+* navbar
+* footer
+* scripts
+* ads
+* duplicate content
+
+---
+
+## STEP 2 — STORE RAW DATA INTO FILES
+
+DO NOT process immediately.
+
+Store each page into:
+/raw_data/{page_name}.json
+
+Format:
+{
+url,
+title,
+headings,
+content,
+tables,
+extracted_at
+}
+
+---
+
+## STEP 3 — CLEAN DATA
+
+Create cleaned version:
+/clean_data/{page_name}.json
+
+Apply:
+
+* remove noise
+* remove repeated lines
+* normalize spacing
+* remove unnecessary symbols
+
+---
+
+## STEP 4 — LOAD MANUAL DATA
+
+Load manually provided data (transport routes, personal profile, etc.)
+
+Store temporarily:
+/manual_data/master.json
+
+---
+
+## STEP 5 — GLOBAL ANALYSIS (CRITICAL)
+
+Load ALL data together (clean_data + manual_data)
+
+Analyze relationships:
+
+* match people across pages
+* connect departments with HODs
+* connect transport routes with stops and drivers
+* merge duplicate or overlapping information
+
+Goal:
+Create a GLOBAL understanding across ALL sources
+
+---
+
+## STEP 6 — SPLIT INTO ATOMIC RECORDS
+
+Break nested data into smallest usable units:
+
+* each person → one record
+* each route → one record
+* each stop → one record
+* each contact → one record
+* each department → one record
+
+DO NOT keep large nested objects.
+
+---
+
+## STEP 7 — DATA ALIGNMENT
+
+Reorganize data by meaning (NOT by page)
+
+Group into unified categories:
+
+* people
+* departments
+* transport routes
+* transport stops
+* public transport (MTC)
+* contacts
+* facilities
+* general info
+
+Link related data:
+
+* route ↔ stops
+* route ↔ driver
+* department ↔ HOD
+* person ↔ role
+
+---
+
+## STEP 8 — NORMALIZATION
+
+Normalize all key fields:
+
+* lowercase
+* remove titles (dr, mr, prof)
+* remove punctuation
+* trim spaces
+
+Apply to:
+
+* names
+* roles
+* departments
+* locations
+
+---
+
+## STEP 9 — ALIAS GENERATION
+
+For every person and entity:
+
+Generate:
+
+* short names
+* last names
+* alternate forms
+
+Example:
+"Dr. K.S Srinivasan" →
+normalized_name: "ks srinivasan"
+aliases: ["srinivasan", "ks srinivasan"]
+
+---
+
+## STEP 10 — FINAL STRUCTURED FILES
+
+Create:
+
+/structured_data/
+
+people.json
+departments.json
+transport_routes.json
+transport_stops.json
+mtc_routes.json
+contacts.json
+general.json
+
+---
+
+## STEP 11 — VALIDATION
+
+Before storing:
+
+* remove duplicates
+* remove empty data
+* ensure every record is complete
+* ensure relationships are valid
+
+---
+
+## STEP 12 — DATABASE STORAGE
+
+Store into MongoDB:
+
+1. entities_master → people
+2. transport_routes → route info
+3. transport_stops → stops
+4. mtc_routes → public transport
+5. structured_data → departments, contacts, facilities
+6. vector_store → ONLY general descriptive text
+
+---
+
+## STEP 13 — SMART CHUNKING (RAG ONLY)
+
+Chunk only general text:
+
+* by meaning
+* by section
+* by heading groups
+
+DO NOT chunk structured data.
+
+---
+
+## STEP 14 — EMBEDDING
+
+Generate embeddings (1536 dimensions)
+
+Embed ONLY:
+
+* clean general descriptions
+
+DO NOT embed:
+
+* routes
+* stops
+* contacts
+* structured records
+
+---
+
+## STEP 15 — METADATA TAGGING
+
+Each vector must include:
+
+* category
+* source URL
+* related entities
+* keywords
+
+---
+
+## STEP 16 — RETRIEVAL COMPATIBILITY
+
+Ensure data supports:
+
+* entity queries (people, roles)
+* transport queries (routes, stops)
+* contact queries
+* list queries
+* general RAG queries
+
+---
+
+## STEP 17 — STRICT RULES
+
+* DO NOT directly embed raw data
+* DO NOT keep nested mixed structures
+* DO NOT duplicate data
+* DO NOT bias toward any domain
+* ALWAYS structure before storing
+
+---
+
+## FINAL GOAL
+
+Build a universal, domain-agnostic knowledge system that:
+
+* understands ALL data types
+* aligns data across sources
+* supports precise queries
+* avoids hallucination
+* behaves like a real AI system (not a keyword bot)
