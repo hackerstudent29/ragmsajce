@@ -37,17 +37,17 @@ bot.on('text', async (ctx) => {
             let response = "";
             let report = { steps: [], tokens: { reasoning: 0, formulation: 0 } };
 
-            // Determine Domain & Route
-            const isTransport = q.match(/\b(bus|route|stop|ar-|van)\b/i);
-            const isMtc = q.match(/\b(mtc|public transport|333|555)\b/i);
-            const isDept = q.match(/\b(dept|department|hod|office|it|cse|ece|eee|admissions)\b/i);
+            // Determine Domain & Route via centralized query understanding
             const isPerson = retrievalService.isPersonQuery(q);
+            const isTransport = retrievalService.isTransportQuery(q);
+            const isDept = retrievalService.isDeptQuery(q);
+            const isMtc = q.match(/\b(mtc|public transport|333|555)\b/i);
 
             if (isPerson) {
                 response = await retrievalService.handlePersonQuery(q);
                 if (response) {
                     report.steps.push("Deterministic Person Match");
-                    const nameMatch = response.match(/matching records for "(.*?)"/);
+                    const nameMatch = response.match(/Results for "(.*?)"/);
                     if (nameMatch) user.last_entity = nameMatch[1];
                 }
             } else if (isDept) {
