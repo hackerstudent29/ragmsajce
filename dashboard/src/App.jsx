@@ -7,7 +7,7 @@ const App = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/logs');
+      const res = await axios.get('/api/logs');
       setLogs(res.data);
     } catch (e) { /* silent */ }
     finally { setLoading(false); }
