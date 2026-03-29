@@ -46,19 +46,30 @@ class RAGService {
                 ],
                 temperature: 0.1
             }, {
-                headers: { 'Authorization': `Bearer ${NVIDIA_API_KEY}`, 'Content-Type': 'application/json' }
+                headers: { 'Authorization': `Bearer ${NVIDIA_API_KEY}`, 'Content-Type': 'application/json' },
+                timeout: 10000
             });
             return { content: res.data.choices[0].message.content, usage: res.data.usage };
-        } catch (e) { return { content: "Reasoning failed.", usage: { total_tokens: 0 } }; }
+        } catch (e) { 
+            console.error('[RAG] NVIDIA Reasoning Failed:', e.message);
+            return { content: "Reasoning failed.", usage: { total_tokens: 0 } }; 
+        }
     }
 
     async getFinalResponse(query, reasoning, context) {
         const prompt = `
-            You are MSAJCE Assistant. Strictly answer only based on DATA provided.
-            QUERY: ${query}
-            REASONING: ${reasoning}
-            DATA: ${JSON.stringify(context)}
-            LAWS: Use plain text, dash bullets, no extra info.
+You are MSAJCE Assistant. Answer ONLY from the DATA below.
+
+QUERY: ${query}
+REASONING: ${reasoning}
+DATA: ${JSON.stringify(context)}
+
+RULES:
+1. CATEGORY WALL: If query asks about a PERSON, never mention bus stops, routes, or transport.
+2. EXACT NAME: If user asks about "Yogesh R", return ONLY the person whose primary name is "Yogesh R". Do NOT return "Dr. Elliss Yogesh R" because that is a different person with a different first name.
+3. DISAMBIGUATION: Only list multiple people if the user gives a vague name (e.g. just "Yogesh" without initial). In that case, list each person separately.
+4. STYLE: Plain text only. Dash bullets. No bold (**), no italic (_). No paragraphs.
+5. CONCISE: Maximum 5 bullet points. No filler text like "Based on the provided data".
         `;
         const result = await gemini.generateContent(prompt);
         return { text: result.response.text(), usage: result.response.usageMetadata };
