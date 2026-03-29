@@ -8,7 +8,7 @@ const NVIDIA_API_KEY = process.env.NVIDIA_NIM_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const gemini = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+const gemini = genAI.getGenerativeModel({ model: "gemini-3-flash-preview", generationConfig: { maxOutputTokens: 1000 } });
 
 class RAGService {
     async generate(query, context, history = []) {
@@ -38,13 +38,16 @@ class RAGService {
 
     async getReasoningResponse(query, context, history) {
         try {
+            // Trim context to keep input tokens low
+            const trimmedContext = JSON.stringify(context).substring(0, 1500);
             const res = await axios.post('https://integrate.api.nvidia.com/v1/chat/completions', {
                 model: "meta/llama-3.1-405b-instruct",
                 messages: [
-                    { role: "system", content: "Reasoning Engine for MSAJCE. Analyze query, context, and history. Decide the factual output." },
-                    { role: "user", content: `Query: ${query}\n\nContext: ${JSON.stringify(context)}\n\nHistory: ${JSON.stringify(history)}` }
+                    { role: "system", content: "Reasoning Engine for MSAJCE. Briefly analyze the query intent and key facts. Be concise." },
+                    { role: "user", content: `Query: ${query}\nContext: ${trimmedContext}` }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                max_tokens: 500
             }, {
                 headers: { 'Authorization': `Bearer ${NVIDIA_API_KEY}`, 'Content-Type': 'application/json' },
                 timeout: 10000
@@ -57,20 +60,17 @@ class RAGService {
     }
 
     async getFinalResponse(query, reasoning, context) {
-        const prompt = `
-You are MSAJCE Assistant. Answer ONLY from the DATA below.
-
+        const trimmedData = JSON.stringify(context).substring(0, 1500);
+        const prompt = `You are MSAJCE Assistant. Answer ONLY from DATA.
 QUERY: ${query}
 REASONING: ${reasoning}
-DATA: ${JSON.stringify(context)}
-
+DATA: ${trimmedData}
 RULES:
-1. CATEGORY WALL: If query asks about a PERSON, never mention bus stops, routes, or transport.
-2. EXACT NAME: If user asks about "Yogesh R", return ONLY the person whose primary name is "Yogesh R". Do NOT return "Dr. Elliss Yogesh R" because that is a different person with a different first name.
-3. DISAMBIGUATION: Only list multiple people if the user gives a vague name (e.g. just "Yogesh" without initial). In that case, list each person separately.
-4. STYLE: Plain text only. Dash bullets. No bold (**), no italic (_). No paragraphs.
-5. CONCISE: Maximum 5 bullet points. No filler text like "Based on the provided data".
-        `;
+1. If query is about a PERSON, never mention bus stops or transport.
+2. If user says "Yogesh R", return ONLY that exact person, not "Dr. Elliss Yogesh R".
+3. Multiple people only if vague name (eg just "Yogesh").
+4. Plain text, dash bullets, no bold, no italic.
+5. Max 5 bullets. No filler like "Based on the provided data".`;
         const result = await gemini.generateContent(prompt);
         return { text: result.response.text(), usage: result.response.usageMetadata };
     }

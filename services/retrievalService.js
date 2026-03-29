@@ -90,12 +90,20 @@ class RetrievalService {
     if (intents.includes('PEOPLE') || intents.includes('GENERAL')) {
       const personName = this.extractPersonName(normalizedQuery) || normalizedQuery;
       
-      context.people = await this.db.collection('entities_master').find({
+      const rawPeople = await this.db.collection('entities_master').find({
         $or: [
           { normalized_name: { $regex: personName, $options: 'i' } },
           { aliases: { $in: [personName] } }
         ]
       }).limit(10).toArray();
+
+      // Strip heavy fields to reduce token usage
+      context.people = rawPeople.map(p => ({
+        name: p.name, role: p.role, mobile: p.mobile, email: p.email,
+        type: p.type, source: p.source, id: p.id,
+        ...(p.education ? { education: p.education } : {}),
+        ...(p.projects ? { projects: p.projects } : {}),
+      }));
 
       if (normalizedQuery.includes('principal')) {
           context.people = context.people.sort((a,b) => (a.role?.includes('Principal') ? -1 : 1));
@@ -116,10 +124,14 @@ class RetrievalService {
     const embedding = await this.getEmbedding(normalizedQuery);
     if (embedding) {
       const results = await this.db.collection('vector_store').find({}).toArray();
-      context.vectorMatches = results.map(doc => ({
-        ...doc, 
-        score: doc.embedding.reduce((sum, val, idx) => sum + val * embedding[idx], 0)
+      const scored = results.map(doc => ({
+        score: doc.embedding.reduce((sum, val, idx) => sum + val * embedding[idx], 0),
+        text: doc.text,
+        source: doc.source
       })).sort((a, b) => b.score - a.score).slice(0, 3);
+      
+      // Only send text snippets to AI, never raw embeddings
+      context.vectorMatches = scored.map(s => ({ text: s.text?.substring(0, 300), source: s.source, score: s.score.toFixed(3) }));
     }
 
     await this.setCache(normalizedQuery, context);
