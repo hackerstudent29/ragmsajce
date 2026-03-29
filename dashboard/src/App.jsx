@@ -1,199 +1,124 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  AreaChart, Area
-} from 'recharts';
-import { 
-  Users, MessageSquare, Bus, ShieldCheck, Mail, ChevronRight, 
-  Terminal, Activity, Settings, LayoutDashboard, Cpu, Layers, Disc3
+  Terminal, ShieldCheck, Mail, ChevronRight, 
+  Cpu, Layers, Activity, Search, RefreshCcw, Download 
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-const data = [
-  { name: 'Mon', queries: 400, tokens: 12000 },
-  { name: 'Tue', queries: 300, tokens: 9000 },
-  { name: 'Wed', queries: 500, tokens: 15600 },
-  { name: 'Thu', queries: 200, tokens: 8000 },
-  { name: 'Fri', queries: 700, tokens: 22000 },
-  { name: 'Sat', queries: 400, tokens: 13000 },
-  { name: 'Sun', queries: 100, tokens: 4000 },
-];
-
-const mockLogs = [
-  {
-    id: 1, query: "Who is the principal?", 
-    tokens: { reasoning: 142, formulation: 89 },
-    steps: ["Retrieval Successful", "Analyzing Intent", "NVIDIA Llama 3.1 Reasoning", "Gemini 3 Flash Output", "Delivered"],
-    timestamp: "12:04:12"
-  },
-  {
-    id: 2, query: "Show bus route for AR-3", 
-    tokens: { reasoning: 98, formulation: 210 },
-    steps: ["Transport Match Found", "Logic Validated", "Mapping Stops", "Output Generated"],
-    timestamp: "12:05:45"
-  }
-];
-
-const StatCard = ({ title, value, icon: Icon, color }) => (
-  <motion.div 
-    whileHover={{ y: -4 }}
-    className="glass-card p-6 flex items-center gap-5 border-none shadow-sm bg-white"
-  >
-    <div className={`p-4 rounded-2xl shadow-sm`} style={{ backgroundColor: `${color}15` }}>
-      <Icon className="w-8 h-8" style={{ color }} />
-    </div>
-    <div className="flex-1">
-      <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">{title}</p>
-      <h3 className="text-2xl font-black text-slate-800 tracking-tight">{value}</h3>
-    </div>
-  </motion.div>
-);
 
 const App = () => {
-  const [selectedLog, setSelectedLog] = useState(mockLogs[0]);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('http://localhost:3001/api/logs');
+      setLogs(res.data);
+      setError(null);
+    } catch (e) {
+      setError("Unable to connect to Real-time Hub. Please check backend.");
+      // Fallback mock if needed for demo
+      if (logs.length === 0) setLogs([]); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 10000); // Auto-refresh every 10s
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-12 max-w-[1600px] mx-auto text-slate-900 font-sans">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-12">
+    <div className="min-h-screen bg-white max-w-[1400px] mx-auto p-12 text-slate-600 antialiased">
+      {/* HEADER SECTION --- MINIMAL */}
+      <div className="flex justify-between items-center mb-16 px-4">
         <div className="flex items-center gap-4">
-          <div className="p-3.5 bg-blue-600 rounded-3xl shadow-xl shadow-blue-500/30">
-            <Cpu className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 uppercase">MSAJCE <span className="text-blue-600">Assistant</span></h1>
-            <p className="text-slate-400 font-bold text-xs flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" /> SYSTEM OPERATIONAL LIVE
-            </p>
-          </div>
+          <Terminal className="w-5 h-5 text-slate-300" />
+          <h1 className="text-sm uppercase tracking-widest text-slate-400">MSAJCE Auditor v2.1</h1>
         </div>
-        <div className="flex gap-4">
-          <button className="glass-card px-6 py-2.5 text-sm font-black text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
-            <LayoutDashboard className="w-4 h-4" /> REFRESH
+        <div className="flex gap-10 text-[11px] uppercase tracking-widest text-slate-400">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-sm" /> Live Connection
+          </div>
+          <button onClick={fetchLogs} className="flex items-center gap-2 hover:text-slate-800 transition-all">
+            <RefreshCcw className="w-3.5 h-3.5" /> Refresh Hub
           </button>
-          <button className="bg-slate-900 px-6 py-2.5 text-sm font-black text-white hover:bg-black transition-all rounded-2xl flex items-center gap-2 shadow-xl shadow-slate-900/20">
-            <Settings className="w-4 h-4" /> EXPORT PDF
+          <button className="flex items-center gap-2 hover:text-slate-800 transition-all">
+            <Download className="w-3.5 h-3.5" /> Logs Export
           </button>
         </div>
       </div>
 
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Active Enrolment" value="1,246" icon={Users} color="#2563eb" />
-        <StatCard title="Daily Total Queries" value="842" icon={MessageSquare} color="#059669" />
-        <StatCard title="Token Consumption" value="234.2K" icon={Cpu} color="#8b5cf6" />
-        <StatCard title="RAG Confidence" value="99.4%" icon={Layers} color="#f59e0b" />
-      </div>
+      {/* ERROR MESSAGE */}
+      {error && <div className="mx-4 mb-8 text-[11px] text-red-500 uppercase tracking-widest border border-red-50 px-4 py-2 rounded">{error}</div>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
-        {/* LOGS LIST */}
-        <div className="lg:col-span-4 h-[700px] flex flex-col gap-4">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="font-black text-slate-500 text-xs uppercase tracking-widest flex items-center gap-2">
-              <Disc3 className="w-4 h-4 text-slate-300" /> Interaction Reports
-            </h3>
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">LIVE</span>
-          </div>
-          <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-            {mockLogs.map((log) => (
-              <motion.div 
-                key={log.id}
-                onClick={() => setSelectedLog(log)}
-                whileTap={{ scale: 0.98 }}
-                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${selectedLog.id === log.id ? 'bg-white border-blue-500 shadow-xl shadow-blue-500/5' : 'bg-slate-50 border-transparent grayscale hover:grayscale-0 hover:bg-white'}`}
-              >
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black bg-white/50 px-2 py-0.5 rounded text-slate-500 uppercase">{log.timestamp}</span>
-                  <div className="flex items-center gap-1 text-[10px] font-black text-indigo-500">
-                    <Cpu className="w-3 h-3" /> {log.tokens.reasoning + log.tokens.formulation} TK
+      {/* AUDIT LOG TABLE --- REAL DATA */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Question & Intent</th>
+              <th>Reasoning / AI Step Audit</th>
+              <th>Response Formulation</th>
+              <th className="text-right">Token Consumption</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(loading && logs.length === 0) ? (
+              <tr><td colSpan="5" className="text-center py-20 text-[11px] uppercase tracking-widest text-slate-300">Synchronizing Local Records...</td></tr>
+            ) : logs.map((log) => (
+              <tr key={log._id} className="log-row clickable">
+                <td className="w-32 opacity-40 font-mono text-[11px]">
+                  {new Date(log.timestamp).toLocaleTimeString([], { hour12: false })}
+                </td>
+                <td className="w-1/4">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-slate-800 leading-relaxed">{log.query}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                      <Search className="w-3 h-3" /> UserID: {log.userId}
+                    </span>
                   </div>
-                </div>
-                <h4 className="mt-3 font-bold text-slate-800 line-clamp-1">{log.query}</h4>
-                <div className="mt-4 flex gap-1">
-                  {log.steps.slice(0, 3).map((st, idx) => (
-                    <div key={idx} className="h-1.5 w-8 rounded-full bg-blue-500 opacity-20" />
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* LOG DETAIL REPORT */}
-        <div className="lg:col-span-8 space-y-6 lg:h-[700px] overflow-y-auto pr-2">
-          {selectedLog && (
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={selectedLog.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="glass-card p-10 min-h-full bg-white space-y-12"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-blue-600 font-black text-xs uppercase tracking-widest">Report Detail</span>
-                    <h2 className="text-3xl font-black text-slate-900 mt-2">{selectedLog.query}</h2>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-slate-400 font-bold text-xs">Total Consumption</span>
-                    <span className="text-4xl font-black text-slate-800">{selectedLog.tokens.reasoning + selectedLog.tokens.formulation}</span>
-                  </div>
-                </div>
-
-                {/* STEPS AUDIT */}
-                <div className="space-y-6">
-                   <h3 className="font-black text-slate-500 text-xs uppercase tracking-widest flex items-center gap-2">
-                     <Layers className="w-4 h-4" /> Execution Steps Audit
-                   </h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {selectedLog.steps.map((step, idx) => (
-                        <div key={idx} className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] font-black flex items-center justify-center">
-                            {idx + 1}
-                          </div>
-                          <span className="text-sm font-bold text-slate-700">{step}</span>
+                </td>
+                <td className="w-1/4 text-[12px] opacity-70">
+                   <div className="flex flex-col gap-2">
+                      {log.steps && log.steps.map((step, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="step-dot" /> {step}
                         </div>
                       ))}
                    </div>
-                </div>
+                </td>
+                <td className="w-1/3 text-slate-400 leading-relaxed text-[12px] italic">
+                   {log.response.substring(0, 150)}...
+                </td>
+                <td className="text-right">
+                   <div className="flex flex-col items-end gap-1.5">
+                    <span className="token-pill">{log.tokens.reasoning + log.tokens.formulation} Total</span>
+                    <div className="flex gap-2 text-[9px] uppercase tracking-wider opacity-30">
+                      <span>NVIDIA: {log.tokens.reasoning}</span>
+                      <span>GEMINI: {log.tokens.formulation}</span>
+                    </div>
+                   </div>
+                </td>
+              </tr>
+            ))}
+            {!loading && logs.length === 0 && (
+              <tr><td colSpan="5" className="text-center py-20 text-[11px] uppercase tracking-widest text-slate-300 italic">No interaction records found in MongoDB Cluster</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                {/* TOKEN USAGE DEEP DIVE */}
-                <div className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-100">
-                   <div className="p-6 rounded-3xl bg-indigo-50/50 space-y-1 border border-indigo-100">
-                      <p className="text-indigo-400 font-black text-[10px] uppercase tracking-widest">Stage 1: NVIDIA Llama 405B</p>
-                      <h4 className="text-3xl font-black text-indigo-600">{selectedLog.tokens.reasoning} <span className="text-sm">tokens</span></h4>
-                      <p className="text-indigo-400 text-xs font-bold leading-relaxed mt-4">NVIDIA reasoning engine analyze the database context, retrieval chunks, and intent classification.</p>
-                   </div>
-                   <div className="p-6 rounded-3xl bg-blue-50/50 space-y-1 border border-blue-100">
-                      <p className="text-blue-400 font-black text-[10px] uppercase tracking-widest">Stage 2: Google Gemini 3 Flash</p>
-                      <h4 className="text-3xl font-black text-blue-600">{selectedLog.tokens.formulation} <span className="text-sm">tokens</span></h4>
-                      <p className="text-blue-400 text-xs font-bold leading-relaxed mt-4">Gemini formulation stage transforms the reasoning plan into a deterministic, human-readable answer.</p>
-                   </div>
-                </div>
-
-                {/* FREQUENCY CHART */}
-                <div className="pt-6">
-                   <h3 className="font-black text-slate-500 text-xs uppercase tracking-widest mb-6">Network Intensity</h3>
-                   <div className="w-full h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={data}>
-                        <defs>
-                          <linearGradient id="colorTok" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <XAxis dataKey="name" hide />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="tokens" stroke="#2563eb" strokeWidth={3} fill="url(#colorTok)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
+      {/* FOOTER AUDIT INFO */}
+      <div className="mt-20 px-4 flex justify-between items-center text-[10px] uppercase tracking-[0.2em] text-slate-200">
+         <span>RAG Pipeline Architecture: Llama-3.1-405B + Gemini-3-Flash</span>
+         <span className="flex items-center gap-4">
+           MSAJCE Internal Use Only <ShieldCheck className="w-3 h-3" />
+         </span>
       </div>
     </div>
   );
