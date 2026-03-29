@@ -115,6 +115,7 @@ class RetrievalService {
   rankPeople(people, query) {
     const q = this.normalizeQuery(query);
     return people.sort((a,b) => {
+        // Exact name match first
         if (a.normalized_name === q && b.normalized_name !== q) return -1;
         if (b.normalized_name === q && a.normalized_name !== q) return 1;
         const getScore = (p) => {
@@ -122,6 +123,8 @@ class RetrievalService {
             const type = (p.type || '').toLowerCase();
             if (role.includes('principal') || role.includes('chairman')) return 100;
             if (role.includes('hod') || role.includes('head')) return 80;
+            if (role.includes('president') || type.includes('office_bearer')) return 70;
+            if (role.includes('secretary') || role.includes('treasurer')) return 65;
             if (type.includes('faculty') || type.includes('professor')) return 60;
             if (type.includes('student')) return 20;
             return 10;

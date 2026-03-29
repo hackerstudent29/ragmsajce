@@ -124,6 +124,27 @@ const runPipeline = async () => {
         }
     });
 
+    // 4b. CSI Office Bearers (from scraped professionalsocieties data)
+    const csiBearers = [
+        { name: 'Yogesh R', role: 'CSI President', department: 'Information Technology', batch: '2022-2026', type: 'OFFICE_BEARER' },
+        { name: 'Saqlin Mustaq M', role: 'CSI Vice President', department: 'AI&DS', batch: '2023-2027', type: 'OFFICE_BEARER' },
+        { name: 'Abu Jabar Mubarak', role: 'CSI Secretary', department: 'CS&BS', batch: '2022-2026', type: 'OFFICE_BEARER' },
+        { name: 'Hanuram PR', role: 'CSI Joint Secretary', department: 'CSE', batch: '2023-2027', type: 'OFFICE_BEARER' },
+        { name: 'Shivam Vishwakarma', role: 'CSI Joint Secretary', department: 'CSE', batch: '2023-2027', type: 'OFFICE_BEARER' },
+        { name: 'Navadharshan', role: 'CSI Treasurer', department: 'CSCS', batch: '2023-2027', type: 'OFFICE_BEARER' },
+    ];
+    csiBearers.forEach(cb => {
+        people.push({
+            name: cb.name,
+            normalized_name: normalize(cb.name),
+            aliases: generateAliases(cb.name),
+            role: cb.role,
+            department: cb.department,
+            batch: cb.batch,
+            type: cb.type
+        });
+    });
+
     const validate = (list, requiredFields) => list.filter(item => {
         return requiredFields.every(f => item[f] && item[f].toString().trim().length > 0);
     });
