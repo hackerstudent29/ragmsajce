@@ -21,37 +21,49 @@ bot.on('text', async (ctx) => {
         console.log(`[LOG] Query from ${userId}: "${query}"`);
         await ctx.sendChatAction('typing');
 
-        // 1. Retrieval
-        console.log('[STEP 1] Retrieval...');
-        const context = await retrievalService.retrieve(query);
-        console.log('[STEP 1] Done.');
+        const isPerson = retrievalService.isPersonQuery(query);
+        let finalResponse = "";
+        let report = { steps: ["Starting Request"], tokens: { reasoning: 0, formulation: 0 } };
 
-        // 2. Session
-        const user = await userService.getUser(userId) || { history: [] };
-        
-        // 3. RAG
-        console.log('[STEP 2] RAG Generation...');
-        const { response, report } = await ragService.generate(query, context, user.history.slice(-5));
-        console.log('[STEP 2] Done.');
+        if (isPerson) {
+            console.log('[ROUTING] Deterministic Entity Flow');
+            const personResult = await retrievalService.handlePersonQuery(query);
+            
+            if (personResult) {
+                finalResponse = personResult;
+                report.steps.push("Deterministic Entity Match Found");
+                report.steps.push("Database Lookup Successful");
+                report.steps.push("Direct Response Generated (No AI)");
+            } else {
+                console.log('[ROUTING] No entity match, falling back to RAG');
+                report.steps.push("No Direct Entity Match");
+                const context = await retrievalService.retrieve(query);
+                const rag = await ragService.generate(query, context, []);
+                finalResponse = rag.response;
+                report = rag.report;
+            }
+        } else {
+            console.log('[ROUTING] RAG / AI Flow');
+            const context = await retrievalService.retrieve(query);
+            const rag = await ragService.generate(query, context, []);
+            finalResponse = rag.response;
+            report = rag.report;
+        }
 
         // 4. Log to DB for Dashboard
         try {
             await retrievalService.connect();
             await retrievalService.db.collection('execution_logs').insertOne({
-                userId, query, response,
+                userId, query, response: finalResponse,
                 steps: report.steps,
                 tokens: report.tokens,
-                timestamp: new Date()
+                timestamp: new Date(),
+                mode: isPerson && !report.tokens.reasoning ? 'DETERMINISTIC' : 'RAG'
             });
         } catch (logErr) { console.error('Log save error:', logErr.message); }
 
-        // 5. Save history
-        user.history.push({ role: 'user', content: query });
-        user.history.push({ role: 'assistant', content: response });
-        await userService.enroll(userId, user);
-
         console.log('[DONE] Sending reply...');
-        await ctx.reply(response);
+        await ctx.reply(finalResponse);
         console.log('[DONE] Reply sent.');
     } catch (e) {
         console.error('Bot Pipeline Error:', e.message);

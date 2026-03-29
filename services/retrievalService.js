@@ -75,21 +75,59 @@ class RetrievalService {
     return q.replace(/^(who is|tell me about|tell me abt|about|abt|find)\s*/i, '').trim();
   }
 
+  // --- NEW: STRICT ENTITY ROUTING ---
+  isPersonQuery(query) {
+    const q = query.toLowerCase();
+    const triggers = ['who is', 'tell me about', 'tell me abt', 'abt', 'about', 'principal', 'professor', 'hod', 'staff', 'chairman', 'secretary'];
+    return triggers.some(t => q.includes(t));
+  }
+
+  async handlePersonQuery(query) {
+    await this.connect();
+    const personName = this.extractPersonName(query);
+    
+    const people = await this.db.collection('entities_master').find({
+      $or: [
+        { normalized_name: personName },
+        { aliases: { $in: [personName] } },
+        { normalized_name: { $regex: personName, $options: 'i' } }
+      ]
+    }).limit(15).toArray();
+
+    if (people.length === 0) return null;
+
+    const grouped = { admin: [], faculty: [], students: [], others: [] };
+    people.forEach(p => {
+      const type = (p.type || '').toLowerCase();
+      const entry = `- ${p.name}\n  Role: ${p.role || 'N/A'}${p.department ? ` (${p.department} Dept)` : ''}${p.mobile ? `\n  Contact: ${p.mobile}` : ''}${p.email ? `\n  Email: ${p.email}` : ''}`;
+      if (type.includes('principal') || type.includes('chairman') || type.includes('admin')) grouped.admin.push(entry);
+      else if (type.includes('faculty') || type.includes('professor') || type.includes('hod')) grouped.faculty.push(entry);
+      else if (type.includes('student')) grouped.students.push(entry);
+      else grouped.others.push(entry);
+    });
+
+    let output = `I found matching records for "${personName}":\n\n`;
+    if (grouped.admin.length > 0) output += `ADMINISTRATION:\n${grouped.admin.join('\n\n')}\n\n`;
+    if (grouped.faculty.length > 0) output += `FACULTY & STAFF:\n${grouped.faculty.join('\n\n')}\n\n`;
+    if (grouped.students.length > 0) output += `STUDENT RECORDS:\n${grouped.students.join('\n\n')}\n\n`;
+    if (output === `I found matching records for "${personName}":\n\n` && grouped.others.length > 0) {
+      output += `RECORDS:\n${grouped.others.join('\n\n')}`;
+    }
+    return output.trim();
+  }
+
   // --- HYBRID SEARCH LOGIC ---
   async retrieve(query) {
     await this.connect();
     const normalizedQuery = query.toLowerCase().trim();
-    
     const cached = await this.getCache(normalizedQuery);
     if (cached) return cached;
 
     const { intents, department } = this.detectIntent(query);
-    const context = { people: [], routes: [], vectorMatches: [], department, intent: intents[0] };
+    const context = { people: [], routes: [], vectorMatches: [], department };
 
-    // 1. Entity Search (PEOPLE)
     if (intents.includes('PEOPLE') || intents.includes('GENERAL')) {
       const personName = this.extractPersonName(normalizedQuery) || normalizedQuery;
-      
       const rawPeople = await this.db.collection('entities_master').find({
         $or: [
           { normalized_name: { $regex: personName, $options: 'i' } },
@@ -97,20 +135,13 @@ class RetrievalService {
         ]
       }).limit(10).toArray();
 
-      // Strip heavy fields to reduce token usage
       context.people = rawPeople.map(p => ({
         name: p.name, role: p.role, mobile: p.mobile, email: p.email,
-        type: p.type, source: p.source, id: p.id,
+        type: p.type, id: p.id,
         ...(p.education ? { education: p.education } : {}),
-        ...(p.projects ? { projects: p.projects } : {}),
       }));
-
-      if (normalizedQuery.includes('principal')) {
-          context.people = context.people.sort((a,b) => (a.role?.includes('Principal') ? -1 : 1));
-      }
     }
 
-    // 2. Transport Search — ONLY when intent is explicitly TRANSPORT (never for PEOPLE queries)
     if (intents.includes('TRANSPORT') && !intents.includes('PEOPLE')) {
       context.routes = await this.db.collection('transport_routes').find({
         $or: [
@@ -120,7 +151,6 @@ class RetrievalService {
       }).toArray();
     }
 
-    // 3. Vector Search (General Info)
     const embedding = await this.getEmbedding(normalizedQuery);
     if (embedding) {
       const results = await this.db.collection('vector_store').find({}).toArray();
@@ -129,9 +159,7 @@ class RetrievalService {
         text: doc.text,
         source: doc.source
       })).sort((a, b) => b.score - a.score).slice(0, 3);
-      
-      // Only send text snippets to AI, never raw embeddings
-      context.vectorMatches = scored.map(s => ({ text: s.text?.substring(0, 300), source: s.source, score: s.score.toFixed(3) }));
+      context.vectorMatches = scored.map(s => ({ text: s.text?.substring(0, 300), source: s.source }));
     }
 
     await this.setCache(normalizedQuery, context);
