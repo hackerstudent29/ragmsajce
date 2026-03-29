@@ -328,14 +328,18 @@ class RetrievalService {
     const { intents } = this.detectIntent(query);
     const context = { people: [], routes: [], vectorMatches: [], relevantDept: [] };
 
+    console.log(`[RETRIEVAL] Fetching context for "${q}", intents: ${intents}`);
+
     if (intents.includes('PEOPLE') || intents.includes('GENERAL')) {
       const personName = this.extractPersonName(q) || q;
+      console.log(`[RETRIEVAL] Checking deterministic people for "${personName}"`);
       context.people = await this.db.collection('entities_master').find({
           $or: [{ normalized_name: { $regex: personName, $options: 'i' } }, { aliases: { $in: [personName] } }]
       }).limit(5).toArray();
     }
 
     if (q.match(/dept|department/)) {
+        console.log(`[RETRIEVAL] Checking departments for "${q}"`);
         const dName = q.replace(/dept|department/g, '').trim();
         context.relevantDept = await this.db.collection('structured_data').find({
             name: { $regex: dName, $options: 'i' }
@@ -343,8 +347,10 @@ class RetrievalService {
     }
 
     // Vector search
+    console.log(`[RETRIEVAL] Fetching embedding for "${q}"`);
     const embedding = await this.getEmbedding(q);
     if (embedding) {
+      console.log(`[RETRIEVAL] Embedding fetched. Running in-memory vector search on ${await this.db.collection('vector_store').countDocuments()} docs`);
       const results = await this.db.collection('vector_store').find({}).toArray();
       const scored = results.map(doc => ({
         score: doc.embedding ? doc.embedding.reduce((sum, val, idx) => sum + val * embedding[idx], 0) : 0,
@@ -356,6 +362,9 @@ class RetrievalService {
           text: s.text?.substring(0, 300),
           source: s.source 
       }));
+      console.log(`[RETRIEVAL] Vector search found ${context.vectorMatches.length} matches`);
+    } else {
+      console.warn(`[RETRIEVAL] No embedding returned, skipping vector search`);
     }
     return context;
   }

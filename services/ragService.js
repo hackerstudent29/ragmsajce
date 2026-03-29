@@ -8,6 +8,7 @@ class RagService {
   // Part 6: Query Optimization (Query Rewriting / Multi-Query)
   async optimizeQuery(query, history = []) {
     try {
+      console.log(`[RAG] Optimizing query: "${query}"`);
       const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
         model: 'google/gemini-2.0-flash-lite-001',
         messages: [
@@ -15,9 +16,17 @@ class RagService {
           { role: 'user', content: `Query: ${query}\nHistory: ${JSON.stringify(history.slice(-2))}` }
         ],
         temperature: 0.1
-      }, { headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}` } });
-      return response.data.choices[0].message.content;
-    } catch (e) { return query; }
+      }, { 
+        headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+        timeout: 10000 
+      });
+      const optimized = response.data.choices[0].message.content;
+      console.log(`[RAG] Query optimized to: "${optimized}"`);
+      return optimized;
+    } catch (e) { 
+      console.error(`[RAG] Query optimization failed: ${e.message}`);
+      return query; 
+    }
   }
 
   // Part 11: Confidence Scoring Layer
@@ -62,6 +71,7 @@ FORMAT:
     `;
 
     try {
+      console.log(`[RAG] Generating response using prompt length: ${prompt.length}`);
       const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
         model: 'google/gemini-2.0-flash-001',
         messages: [{ role: 'system', content: prompt }],
@@ -73,11 +83,13 @@ FORMAT:
       });
 
       let text = response.data.choices[0].message.content;
+      console.log(`[RAG] Response generated: ${text.substring(0, 100)}...`);
       const confidence = this.calculateConfidence(context, text);
       text = text.replace('{SCORE}', confidence);
 
       return { response: text, report };
     } catch (e) {
+      console.error(`[RAG] Generation failed: ${e.message}`);
       return { response: "Internal error processing the reply. Please retry.", report };
     }
   }
