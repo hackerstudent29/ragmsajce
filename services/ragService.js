@@ -29,17 +29,6 @@ class RagService {
     }
   }
 
-  // Part 11: Confidence Scoring Layer
-  calculateConfidence(context, response) {
-    let score = 0;
-    if (context.people?.length > 0) score += 40;
-    if (context.routes?.length > 0) score += 40;
-    if (context.vectorMatches?.length > 0) score += 20;
-    
-    // Penalize if response contains "couldn't find"
-    if (response?.toLowerCase().includes("couldn't find")) score = 0;
-    return Math.min(score, 100);
-  }
 
   async generate(query, context, history = []) {
     const report = { steps: ["Part 6: Optimization", "Part 7: Context Aggregation", "Part 11: Scoring"], tokens: 0 };
@@ -67,7 +56,6 @@ ${contextString}
 FORMAT:
 - Structured bullets
 - No duplication
-- Confidence: {SCORE}%
     `;
 
     try {
@@ -84,8 +72,6 @@ FORMAT:
 
       let text = response.data.choices[0].message.content;
       console.log(`[RAG] Response generated: ${text.substring(0, 50)}...`);
-      const confidence = this.calculateConfidence(context, text);
-      text = text.replace('{SCORE}', confidence);
 
       return { response: text, report };
     } catch (e) {
@@ -98,7 +84,7 @@ FORMAT:
                     messages: [{ role: 'system', content: prompt }],
                     temperature: 0.1
                 }, { headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}` }, timeout: 20000 });
-              return { response: fallback.data.choices[0].message.content.replace('{SCORE}', '50'), report };
+              return { response: fallback.data.choices[0].message.content, report };
           } catch (f) {}
       }
       return { response: "I'm having trouble connecting to my knowledge base right now. Please try again in a moment.", report };

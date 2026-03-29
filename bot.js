@@ -50,6 +50,7 @@ async function processQuery(ctx) {
 
             const { intents } = retrievalService.detectIntent(q);
             const isGreeting = intents.includes('GREETING');
+            const isAdmission = intents.includes('ADMISSION');
             const isPerson = retrievalService.isPersonQuery(q);
             const isTransport = retrievalService.isTransportQuery(q);
             const isDept = retrievalService.isDeptQuery(q);
@@ -57,16 +58,21 @@ async function processQuery(ctx) {
 
             if (isGreeting) return { response: "Hi! How can I help you with transport, admissions, or personnel info today?", report };
 
-            if (isPerson) {
+            if (isAdmission) {
+                response = await retrievalService.handleAdmissionQuery(q);
+                if (response) report.steps.push("Deterministic Admission Match");
+            }
+
+            if (!response && isPerson) {
                 response = await retrievalService.handlePersonQuery(q);
                 if (response) report.steps.push("Deterministic Person Match");
-            } else if (isDept) {
+            } else if (!response && isDept) {
                 response = await retrievalService.handleDeptQuery(q);
                 if (response) report.steps.push("Deterministic Dept Match");
-            } else if (isTransport) {
+            } else if (!response && isTransport) {
                 response = await retrievalService.handleTransportQuery(q);
                 if (response) report.steps.push("Deterministic Transport Match");
-            } else if (isMtc) {
+            } else if (!response && isMtc) {
                 response = await retrievalService.handleMtcQuery(q);
                 if (response) report.steps.push("Deterministic MTC Match");
             }

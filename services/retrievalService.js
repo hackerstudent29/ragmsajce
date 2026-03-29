@@ -13,8 +13,8 @@ const REDIS_TOKEN = process.env.UPSTASH_REDIS_TOKEN;
 class RetrievalService {
   constructor() {
     this.client = new MongoClient(MONGO_URI, { 
-        serverSelectionTimeoutMS: 30000, 
-        connectTimeoutMS: 30000 
+        serverSelectionTimeoutMS: 5000, 
+        connectTimeoutMS: 5000 
     });
     this.db = null;
     this.cacheTTL = 3600; 
@@ -215,6 +215,20 @@ class RetrievalService {
     return output.trim();
   }
 
+  // ─── ADMISSION HANDLER ──────────────────────────────────────────
+
+  async handleAdmissionQuery(query) {
+    await this.connect();
+    const q = this.normalizeQuery(query);
+    const admissions = await this.db.collection('structured_data').find({
+        $or: [ { name: /admission/i }, { type: 'ADMIN' } ]
+    }).toArray();
+    if (admissions.length === 0) return null;
+    let output = "ADMISSION OFFICE INFO:\n\n";
+    admissions.forEach(a => output += `- ${a.name}\n  Contact: ${a.contact || 'N/A'}\n  HOD: ${a.hod || 'N/A'}\n\n`);
+    return output.trim();
+  }
+
   // ─── PART 8: COMPUTATION LAYER ─────────────────────────────────
 
   async handleLogicalTransportQuery(query) {
@@ -378,7 +392,7 @@ class RetrievalService {
         input: text
       }, {
         headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
-        timeout: 15000
+        timeout: 5000
       });
       return response.data.data[0].embedding;
     } catch (e) { return null; }
