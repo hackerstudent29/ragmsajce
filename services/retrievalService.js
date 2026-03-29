@@ -110,26 +110,46 @@ class RetrievalService {
     return intents.includes('DEPT') && !intents.includes('PEOPLE');
   }
 
-  // ─── PART 6: ENTITY SYSTEM ─────────────────────────────────────
+  // ─── LAYERED RULE-BASED RANKING ──────────────────────────────
 
   rankPeople(people, query) {
     const q = this.normalizeQuery(query);
-    return people.sort((a,b) => {
-        // Exact name match first
-        if (a.normalized_name === q && b.normalized_name !== q) return -1;
-        if (b.normalized_name === q && a.normalized_name !== q) return 1;
-        const getScore = (p) => {
-            const role = (p.role || '').toLowerCase();
-            const type = (p.type || '').toLowerCase();
-            if (role.includes('principal') || role.includes('chairman')) return 100;
-            if (role.includes('hod') || role.includes('head')) return 80;
-            if (role.includes('president') || type.includes('office_bearer')) return 90;
-            if (role.includes('secretary') || role.includes('treasurer')) return 65;
-            if (type.includes('faculty') || type.includes('professor')) return 60;
-            if (type.includes('student')) return 20;
-            return 10;
-        };
-        return getScore(b) - getScore(a);
+
+    // Tag each person with match quality
+    people.forEach(p => {
+      // Layer 1: Match quality
+      if (p.normalized_name === q) p._matchType = 'EXACT';
+      else if (p.aliases && p.aliases.includes(q)) p._matchType = 'ALIAS';
+      else p._matchType = 'PARTIAL';
+
+      // Layer 2: Name closeness (fewer extra words = closer match)
+      const nameParts = (p.normalized_name || '').split(' ');
+      const queryParts = q.split(' ');
+      p._nameDistance = Math.abs(nameParts.length - queryParts.length);
+
+      // Layer 3: Context role (tiebreaker only)
+      const role = (p.role || '').toLowerCase();
+      const type = (p.type || '').toLowerCase();
+      if (role.includes('president')) p._roleWeight = 5;
+      else if (role.includes('principal') || role.includes('chairman')) p._roleWeight = 4;
+      else if (role.includes('hod') || role.includes('head')) p._roleWeight = 3;
+      else if (role.includes('secretary') || role.includes('treasurer')) p._roleWeight = 2;
+      else if (type.includes('faculty') || type.includes('professor')) p._roleWeight = 1;
+      else p._roleWeight = 0;
+    });
+
+    const matchOrder = { EXACT: 0, ALIAS: 1, PARTIAL: 2 };
+
+    return people.sort((a, b) => {
+      // Rule 1: Match quality wins
+      const mqDiff = matchOrder[a._matchType] - matchOrder[b._matchType];
+      if (mqDiff !== 0) return mqDiff;
+
+      // Rule 2: Closer name match wins (fewer extra words)
+      if (a._nameDistance !== b._nameDistance) return a._nameDistance - b._nameDistance;
+
+      // Rule 3: Role as tiebreaker only
+      return b._roleWeight - a._roleWeight;
     });
   }
 
@@ -149,13 +169,14 @@ class RetrievalService {
     if (people.length === 0) return null;
     people = this.rankPeople(people, personName);
 
-    const grouped = { admin: [], faculty: [], bearers: [], students: [], others: [] };
+    // Group for display — always show all matches organized
+    const grouped = { admin: [], bearers: [], faculty: [], students: [], others: [] };
     people.forEach(p => {
       const type = (p.type || '').toLowerCase();
       const role = (p.role || '').toLowerCase();
       const entry = `- ${p.name}\n  Role: ${p.role || 'N/A'}${p.department ? ` (${p.department} Dept)` : ''}${p.batch ? `\n  Batch: ${p.batch}` : ''}${p.mobile ? `\n  Contact: ${p.mobile}` : ''}`;
       
-      if (role.includes('principal') || role.includes('chairman') || role.includes('admin')) grouped.admin.push(entry);
+      if (role.includes('principal') || role.includes('chairman')) grouped.admin.push(entry);
       else if (type.includes('office_bearer') || role.includes('president') || role.includes('secretary') || role.includes('treasurer')) grouped.bearers.push(entry);
       else if (type.includes('faculty') || type.includes('professor') || type.includes('staff')) grouped.faculty.push(entry);
       else if (type.includes('student')) grouped.students.push(entry);
