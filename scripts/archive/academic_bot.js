@@ -99,13 +99,15 @@ bot.on('text', async (ctx) => {
     const query = ctx.message.text;
 
     try {
-        console.log(`Query from ${userId}: ${query}`);
+        console.log(`[BOT] Received Query from ${userId}: "${query}"`);
         await ctx.sendChatAction('typing');
 
         // Step 1: Retrieval
+        console.log(`[STAGE 1] Starting Retrieval...`);
         const { people, routes } = await retriever.searchEntities(query);
         const vectorMatches = await retriever.searchVectorStore(query);
         const context = { people, routes, vectorMatches };
+        console.log(`[STAGE 1] Retrieval Complete. Context size: ${JSON.stringify(context).length} bytes`);
 
         // Step 2: Session/History
         const sessionData = await getSession(userId);
@@ -115,17 +117,22 @@ bot.on('text', async (ctx) => {
         const chatHistory = hasReference ? (sessionData.history.slice(-5)) : [];
 
         // Step 3: Reasoning (Stage 1)
+        console.log(`[STAGE 2] Starting NVIDIA Reasoning (History: ${hasReference})...`);
         const reasoning = await getReasoning(query, context, chatHistory);
+        console.log(`[STAGE 2] Reasoning Complete.`);
 
         // Step 4: Output Formulation (Stage 2)
+        console.log(`[STAGE 3] Starting Gemini Output Formulation...`);
         const finalAnswer = await getFinalResponse(query, reasoning, context);
+        console.log(`[STAGE 3] Output Ready.`);
 
-        // Update history
+        // Updating Session
         sessionData.history.push({ role: 'user', content: query });
         sessionData.history.push({ role: 'assistant', content: finalAnswer });
         await setSession(userId, sessionData);
 
         await ctx.reply(finalAnswer); 
+        console.log(`[BOT] Reply sent to ${userId}`);
     } catch (e) {
         console.error('Bot Request Full Error:', e);
         ctx.reply("Oops! I had trouble formatting the response correctly. Re-trying...");

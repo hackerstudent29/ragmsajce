@@ -49,7 +49,7 @@ class Retriever {
                 { normalized_name: { $regex: normalizedQuery, $options: 'i' } },
                 { aliases: { $in: [normalizedQuery] } }
             ]
-        }).toArray();
+        }).limit(15).toArray();
 
         // Classification & Deduplication
         const classifiedPeople = people.map(p => {
@@ -84,7 +84,7 @@ class Retriever {
         const scored = results.map(doc => {
             const score = doc.embedding.reduce((sum, val, idx) => sum + val * embedding[idx], 0);
             return { ...doc, score };
-        }).sort((a, b) => b.score - a.score).slice(0, 5);
+        }).sort((a, b) => b.score - a.score).slice(0, 3);
 
         return scored.map(s => ({
             text: s.text,
