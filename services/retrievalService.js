@@ -13,8 +13,8 @@ const REDIS_TOKEN = process.env.UPSTASH_REDIS_TOKEN;
 class RetrievalService {
   constructor() {
     this.client = new MongoClient(MONGO_URI, { 
-        serverSelectionTimeoutMS: 10000, 
-        connectTimeoutMS: 10000 
+        serverSelectionTimeoutMS: 30000, 
+        connectTimeoutMS: 30000 
     });
     this.db = null;
     this.cacheTTL = 3600; 
