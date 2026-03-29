@@ -116,45 +116,86 @@ class RetrievalService {
     return output.trim();
   }
 
-  // --- ADVANCED DETERMINISTIC DOMAINS ---
-  async handleDeptQuery(query) {
-    await this.connect();
-    const normalized = query.toLowerCase().replace(/dept|department/g, '').trim();
-    const depts = await this.db.collection('structured_data').find({
-        $or: [ { name: { $regex: normalized, $options: 'i' } }, { code: { $regex: normalized, $options: 'i' } } ]
-    }).toArray();
-
-    if (depts.length === 0) return null;
-    let output = `DEPARTMENT INFO:\n\n`;
-    depts.forEach(d => {
-        output += `Name: ${d.name}\nHead: ${d.hod || 'N/A'}\nContact: ${d.contact || 'N/A'}\nEmail: ${d.email || 'N/A'}\n\n`;
+  // --- MODULE 2: ENTITY RANKING (Principal > Faculty > Student) ---
+  rankPeople(people, query) {
+    const q = query.toLowerCase();
+    return people.sort((a,b) => {
+        if (a.normalized_name === q && b.normalized_name !== q) return -1;
+        if (b.normalized_name === q && a.normalized_name !== q) return 1;
+        const getScore = (p) => {
+            const role = (p.role || '').toLowerCase();
+            const type = (p.type || '').toLowerCase();
+            if (role.includes('principal') || role.includes('chairman')) return 100;
+            if (role.includes('hod') || role.includes('head')) return 80;
+            if (type.includes('faculty') || type.includes('professor')) return 60;
+            if (type.includes('student')) return 20;
+            return 10;
+        };
+        return getScore(b) - getScore(a);
     });
+  }
+
+  // --- MODULE 3: COMPUTATION LAYER ---
+  async handleLogicalTransportQuery(query) {
+    await this.connect();
+    const q = query.toLowerCase();
+    if (q.includes('earliest') || q.includes('first bus')) {
+        const stops = await this.db.collection('transport_stops').find({}).sort({ time: 1 }).limit(5).toArray();
+        let out = "EARLIEST BUS TIMINGS:\n\n";
+        stops.forEach(s => out += `- ${s.time}: ${s.stop} (Route ${s.route_no})\n`);
+        return out.trim();
+    }
+    if (q.includes('latest') || q.includes('last stop')) {
+        const stops = await this.db.collection('transport_stops').find({ stop: /college/i }).toArray();
+        let out = "COLLEGE ARRIVAL TIMES:\n\n";
+        stops.forEach(s => out += `- Route ${s.route_no}: Arrives at ${s.time}\n`);
+        return out.trim();
+    }
+    return null;
+  }
+
+  // --- UPDATED DETERMINISTIC HANDLERS ---
+  async handlePersonQuery(query) {
+    await this.connect();
+    const personName = this.extractPersonName(query);
+    let people = await this.db.collection('entities_master').find({
+      $or: [ { normalized_name: personName }, { aliases: { $in: [personName] } }, { normalized_name: { $regex: personName, $options: 'i' } } ]
+    }).limit(15).toArray();
+
+    if (people.length === 0) return null;
+
+    // Rank people by institutional importance
+    people = this.rankPeople(people, personName);
+
+    const grouped = { admin: [], faculty: [], students: [], others: [] };
+    people.forEach(p => {
+      const type = (p.type || '').toLowerCase();
+      const role = (p.role || '').toLowerCase();
+      const entry = `- ${p.name}\n  Role: ${p.role || 'N/A'}${p.department ? ` (${p.department} Dept)` : ''}${p.mobile ? `\n  Contact: ${p.mobile}` : ''}`;
+      
+      if (role.includes('principal') || role.includes('chairman') || role.includes('admin')) grouped.admin.push(entry);
+      else if (type.includes('faculty') || type.includes('professor') || type.includes('staff')) grouped.faculty.push(entry);
+      else if (type.includes('student')) grouped.students.push(entry);
+      else grouped.others.push(entry);
+    });
+
+    let output = `I found matches for "${personName}" (ranked by relevance):\n\n`;
+    if (grouped.admin.length > 0) output += `ADMINISTRATION:\n${grouped.admin.join('\n\n')}\n\n`;
+    if (grouped.faculty.length > 0) output += `FACULTY & STAFF:\n${grouped.faculty.join('\n\n')}\n\n`;
+    if (grouped.students.length > 0) output += `STUDENT RECORDS:\n${grouped.students.join('\n\n')}\n\n`;
     return output.trim();
   }
 
   async handleTransportQuery(query) {
     await this.connect();
+    const logical = await this.handleLogicalTransportQuery(query);
+    if (logical) return logical;
+
     let normalized = query.toLowerCase().replace(/bus|route|stop/g, '').trim();
-    
-    let routes = await this.db.collection('transport_routes').find({
-        $or: [ { route_no: { $regex: normalized, $options: 'i' } }, { driver: { $regex: normalized, $options: 'i' } } ]
-    }).toArray();
-
-    let stops = await this.db.collection('transport_stops').find({
-        $or: [ { stop: { $regex: normalized, $options: 'i' } }, { normalized_stop: { $regex: normalized, $options: 'i' } } ]
-    }).toArray();
-
-    // Part 13: Fallback (Broaden search if no matches)
-    if (routes.length === 0 && stops.length === 0 && normalized.length > 3) {
-        console.log('[FALLBACK] Broadening transport search...');
-        const partial = normalized.substring(0, 4);
-        stops = await this.db.collection('transport_stops').find({
-            $or: [ { stop: { $regex: partial, $options: 'i' } }, { normalized_stop: { $regex: partial, $options: 'i' } } ]
-        }).toArray();
-    }
+    let routes = await this.db.collection('transport_routes').find({ $or: [ { route_no: { $regex: normalized, $options: 'i' } }, { driver: { $regex: normalized, $options: 'i' } } ] }).toArray();
+    let stops = await this.db.collection('transport_stops').find({ $or: [ { stop: { $regex: normalized, $options: 'i' } }, { normalized_stop: { $regex: normalized, $options: 'i' } } ] }).toArray();
 
     if (routes.length === 0 && stops.length === 0) return null;
-
     let output = `TRANSPORT INFO for "${normalized}":\n\n`;
     if (routes.length > 0) {
         output += `ROUTES:\n`;

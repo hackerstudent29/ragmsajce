@@ -65,6 +65,18 @@ bot.on('text', async (ctx) => {
             if (!response) {
                 report.steps.push("No Deterministic Match - Falling back to RAG");
                 const context = await retrievalService.retrieve(q);
+                
+                // Module 4: Feedback Loop (Detect Gaps)
+                if (context.people.length === 0 && context.routes.length === 0 && context.vectorMatches.length === 0) {
+                    console.log(`[FEEDBACK] Data gap detected for: "${q}"`);
+                    try {
+                        await retrievalService.connect();
+                        await retrievalService.db.collection('failed_queries').insertOne({
+                            query: q, userId, timestamp: new Date(), type: 'DATA_GAP'
+                        });
+                    } catch (e) {}
+                }
+
                 const rag = await ragService.generate(q, context, user.history.slice(-3));
                 response = rag.response;
                 report = rag.report;

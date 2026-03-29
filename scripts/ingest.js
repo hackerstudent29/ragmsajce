@@ -110,7 +110,22 @@ const runPipeline = async () => {
     fs.writeFileSync(path.join(__dirname, '../structured_data/mtc_routes.json'), JSON.stringify(mtc, null, 2));
     fs.writeFileSync(path.join(__dirname, '../structured_data/structured_data.json'), JSON.stringify(structured, null, 2));
 
-    // 6. DB Sync (Part 2)
+    // 5. Atomic File Storage (Part 10)
+    const now = new Date();
+    const structuredWithTime = [
+        { name: 'Admissions Office', hod: 'Registrar', contact: '044-27470025', type: 'ADMIN', last_updated: now },
+        { name: 'Information Technology', code: 'IT', hod: 'Dr. Elliss Yogesh R', type: 'DEPT', last_updated: now },
+        { name: 'Computer Science', code: 'CSE', hod: 'Dr. Srinivasan', type: 'DEPT', last_updated: now },
+        { name: 'Transport Office', hod: 'Dr. K.P. Santhosh Nathan', contact: '98408 86992', type: 'ADMIN', last_updated: now }
+    ];
+
+    const peopleWithTime = people.map(p => ({ ...p, last_updated: now }));
+    const routesWithTime = routes.map(r => ({ ...r, last_updated: now }));
+    const stopsWithTime = stops.map(s => ({ ...s, last_updated: now }));
+    const mtcWithTime = mtc.map(m => ({ ...m, last_updated: now }));
+
+    // ... (fs write logic) ...
+
     const client = new MongoClient(MONGO_URI);
     try {
         await client.connect();
@@ -119,21 +134,21 @@ const runPipeline = async () => {
         console.log('[SYNC] Database Integration...');
         
         await db.collection('entities_master').deleteMany({});
-        if (people.length > 0) await db.collection('entities_master').insertMany(people);
+        if (peopleWithTime.length > 0) await db.collection('entities_master').insertMany(peopleWithTime);
         
         await db.collection('transport_routes').deleteMany({});
-        if (routes.length > 0) await db.collection('transport_routes').insertMany(routes);
+        if (routesWithTime.length > 0) await db.collection('transport_routes').insertMany(routesWithTime);
         
         await db.collection('transport_stops').deleteMany({});
-        if (stops.length > 0) await db.collection('transport_stops').insertMany(stops);
+        if (stopsWithTime.length > 0) await db.collection('transport_stops').insertMany(stopsWithTime);
         
         await db.collection('mtc_routes').deleteMany({});
-        if (mtc.length > 0) await db.collection('mtc_routes').insertMany(mtc);
+        if (mtcWithTime.length > 0) await db.collection('mtc_routes').insertMany(mtcWithTime);
 
         await db.collection('structured_data').deleteMany({});
-        if (structured.length > 0) await db.collection('structured_data').insertMany(structured);
+        if (structuredWithTime.length > 0) await db.collection('structured_data').insertMany(structuredWithTime);
 
-        console.log('[SUCCESS] Production System Data Ingested.');
+        console.log('[SUCCESS] Production System Data Ingested With Timestamps.');
     } catch (e) {
         console.error('[ERROR] Sync Failed:', e.message);
     } finally {

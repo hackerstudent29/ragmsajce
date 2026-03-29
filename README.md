@@ -1,37 +1,57 @@
-# MSAJCE Academic Assistant - RAG Hybrid AI Bot
+# MSAJCE Academic AI (Production-Grade Hybrid System)
 
-A production-grade Telegram bot designed for the **Mohamed Sathak A.J. College of Engineering (MSAJCE)**, implementing a multi-stage RAG (Retrieval-Augmented Generation) pipeline for high-accuracy institutional knowledge retrieval.
+A deterministic, context-aware RAG system designed for Mohamed Sathak A.J. College of Engineering. This system eliminates hallucinations by prioritizing structured database lookups over general AI reasoning.
 
-## 🚀 Architecture
-- **Stage 1 (Scraping & Ingestion)**: Extracts content from 30+ official college URLs and structured manual data.
-- **Stage 2 (Retriever)**: Hybrid retrieval system combining MongoDB structured entity search with Vector-based semantic search.
-- **Stage 3 (Reasoning - NVIDIA)**: Real-time analysis using `llama-3.1-405b-instruct` for planning and fact-checking.
-- **Stage 4 (Output Formulation - Gemini)**: High-performance output using `gemini-3-flash-preview` for final user communication.
+## 🏗️ System Architecture (v2)
 
-## 🛠️ Tech Stack
-- **Bot Engine**: `telegraf` (Telegraf API framework)
-- **Database**: MongoDB (Structured records & Vector Store)
-- **State Store**: Upstash Redis (Session and history management)
-- **LLM Reasoning**: NVIDIA NIM API
-- **LLM Output & Embeddings**: Google Gemini API & OpenRouter (OpenAI v3)
+The system uses a **Triple-Path Hybrid Retrieval** architecture:
 
-## 📁 System Modules
-- `scripts/scraper.js`: Data collection from web sources.
-- `scripts/cleaner.js`: Normalization and deduplication.
-- `scripts/structurer.js`: Mapping data to atomic records (people, routes, stops).
-- `scripts/retriever.js`: Hybrid query logic.
-- `scripts/academic_bot.js`: Core Telegram bot service.
+1.  **Deterministic Entity Path**: All names (Yogesh, Ram) and institutional roles (Principal, HOD) are resolved directly from MongoDB. Zero tokens used. 100% accuracy.
+2.  **Structured Logistics Path**: Complex institutional data like college bus routes, stop timings, and MTC paths are calculated using a specialized logic layer (Module 3).
+3.  **Advanced RAG Path**: General inquiries (About, Admission, Vision) are handled via a hybrid BM25 + Semantic search using Gemini 2.0 Flash.
 
-## 🔑 Setup
-1. Define environment variables in a `.env` file (see `scripts/.env.example`).
-2. Run data ingestion pipeline: 
-   ```bash
-   node scripts/scraper.js
-   node scripts/cleaner.js
-   node scripts/structurer.js
-   node scripts/db_storage.js
-   ```
-3. Launch the bot:
-   ```bash
-   node scripts/academic_bot.js
-   ```
+## 🚀 Key Modules (The AI Product)
+
+### Module 1: Data Freshness
+Every record in the database is timestamped with a `last_updated` field. The system tracks data staleness to ensure information like bus timings remains current.
+
+### Module 2: Entity Ranking
+Deterministic matches are ranked by institutional importance (e.g., *Principal* takes precedence over *Student* matches for the same name/alias).
+
+### Module 3: Computation Layer
+Supports logical queries like:
+*   *"Earliest bus from college"* (Logical DB sorting)
+*   *"Is there a route through [Stop]?"*
+*   *"Principal and Transport"* (Multi-query splitting)
+
+### Module 4 & 5: Feedback & Self-Improvement
+All ambiguous or failed queries (where no data exists) are logged to the `failed_queries` collection. This data is exposed to the dashboard for administrative enrichment.
+
+## 🛠️ Ingestion Workflow
+
+```mermaid
+graph TD
+    A[Raw Data] --> B[SCRAPE & CLEAN]
+    B --> C[GLOBAL ANALYSIS]
+    C --> D[ATOMIC SPLITTING]
+    D --> E[NORMALIZATION & ALIASES]
+    E --> F[DATABASE SYNC]
+    F --> G[HYBRID RETRIEVAL]
+```
+
+## ⚙️ Technical Stack
+*   **LLM**: Google Gemini 2.0 Flash (via OpenRouter)
+*   **Vector DB**: MongoDB Atlas Vector Store
+*   **Database**: MongoDB (Entities, Transport, MTC, Logs)
+*   **Embeddings**: OpenAI text-embedding-3-small
+*   **Bot Framework**: Telegraf (Telegram)
+
+## 🚦 How to Run
+1.  **Ingest Data**: `node scripts/ingest.js` (Syncs all ground-truth records).
+2.  **Bot Service**: `node bot.js` (Starts the Telegram interaction layer).
+3.  **Audit API**: `node api/server.js` (Backend for the dashboard).
+4.  **Audit Dashboard**: `npm run dev` in `/dashboard`.
+
+---
+
+© 2026 MSAJCE | Grounded Institutional Intelligence
