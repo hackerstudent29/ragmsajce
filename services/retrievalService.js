@@ -116,53 +116,117 @@ class RetrievalService {
     return output.trim();
   }
 
-  // --- HYBRID SEARCH LOGIC ---
+  // --- ADVANCED DETERMINISTIC DOMAINS ---
+  async handleDeptQuery(query) {
+    await this.connect();
+    const normalized = query.toLowerCase().replace(/dept|department/g, '').trim();
+    const depts = await this.db.collection('structured_data').find({
+        $or: [ { name: { $regex: normalized, $options: 'i' } }, { code: { $regex: normalized, $options: 'i' } } ]
+    }).toArray();
+
+    if (depts.length === 0) return null;
+    let output = `DEPARTMENT INFO:\n\n`;
+    depts.forEach(d => {
+        output += `Name: ${d.name}\nHead: ${d.hod || 'N/A'}\nContact: ${d.contact || 'N/A'}\nEmail: ${d.email || 'N/A'}\n\n`;
+    });
+    return output.trim();
+  }
+
+  async handleTransportQuery(query) {
+    await this.connect();
+    let normalized = query.toLowerCase().replace(/bus|route|stop/g, '').trim();
+    
+    let routes = await this.db.collection('transport_routes').find({
+        $or: [ { route_no: { $regex: normalized, $options: 'i' } }, { driver: { $regex: normalized, $options: 'i' } } ]
+    }).toArray();
+
+    let stops = await this.db.collection('transport_stops').find({
+        $or: [ { stop: { $regex: normalized, $options: 'i' } }, { normalized_stop: { $regex: normalized, $options: 'i' } } ]
+    }).toArray();
+
+    // Part 13: Fallback (Broaden search if no matches)
+    if (routes.length === 0 && stops.length === 0 && normalized.length > 3) {
+        console.log('[FALLBACK] Broadening transport search...');
+        const partial = normalized.substring(0, 4);
+        stops = await this.db.collection('transport_stops').find({
+            $or: [ { stop: { $regex: partial, $options: 'i' } }, { normalized_stop: { $regex: partial, $options: 'i' } } ]
+        }).toArray();
+    }
+
+    if (routes.length === 0 && stops.length === 0) return null;
+
+    let output = `TRANSPORT INFO for "${normalized}":\n\n`;
+    if (routes.length > 0) {
+        output += `ROUTES:\n`;
+        routes.forEach(r => output += `- Route ${r.route_no}\n  Driver: ${r.driver || 'N/A'}\n  Phone: ${r.phone || 'N/A'}\n\n`);
+    }
+    if (stops.length > 0) {
+        output += `STOPS:\n`;
+        const grouped = {};
+        stops.forEach(s => {
+            if (!grouped[s.route_no]) grouped[s.route_no] = [];
+            grouped[s.route_no].push(`- ${s.stop} at ${s.time || 'N/A'}`);
+        });
+        for (const [r, sList] of Object.entries(grouped)) output += `Route ${r}:\n${sList.join('\n')}\n\n`;
+    }
+    return output.trim();
+  }
+
+  async handleMtcQuery(query) {
+    await this.connect();
+    const normalized = query.toLowerCase();
+    const mtc = await this.db.collection('mtc_routes').find({}).toArray();
+    const matches = mtc.filter(m => normalized.includes(m.route_no.toLowerCase()) || m.stops.some(s => normalized.includes(s.toLowerCase())));
+    if (matches.length === 0) return null;
+    let output = "MTC PUBLIC TRANSPORT:\n\n";
+    matches.forEach(m => output += `- Route ${m.route_no}: ${m.from} to ${m.to}\n  Key Stops: ${m.stops.slice(0, 5).join(', ')}...\n\n`);
+    return output.trim();
+  }
+
+  splitQuery(query) {
+    const q = query.toLowerCase();
+    if (q.includes(' and ') || q.includes(' & ')) return q.split(/\s+and\s+|\s+&\s+/).map(s => s.trim());
+    return [q];
+  }
+
+  // --- HYBRID RAG SEARCH (Part 4) ---
   async retrieve(query) {
     await this.connect();
     const normalizedQuery = query.toLowerCase().trim();
-    const cached = await this.getCache(normalizedQuery);
-    if (cached) return cached;
+    const { intents } = this.detectIntent(query);
+    const context = { people: [], routes: [], vectorMatches: [], relevantDept: [] };
 
-    const { intents, department } = this.detectIntent(query);
-    const context = { people: [], routes: [], vectorMatches: [], department };
-
+    // Hybrid Search: BM25 (Keyword) + Semantic
     if (intents.includes('PEOPLE') || intents.includes('GENERAL')) {
       const personName = this.extractPersonName(normalizedQuery) || normalizedQuery;
-      const rawPeople = await this.db.collection('entities_master').find({
-        $or: [
-          { normalized_name: { $regex: personName, $options: 'i' } },
-          { aliases: { $in: [personName] } }
-        ]
-      }).limit(10).toArray();
-
-      context.people = rawPeople.map(p => ({
-        name: p.name, role: p.role, mobile: p.mobile, email: p.email,
-        type: p.type, id: p.id,
-        ...(p.education ? { education: p.education } : {}),
-      }));
+      context.people = await this.db.collection('entities_master').find({
+          $or: [{ normalized_name: { $regex: personName, $options: 'i' } }, { aliases: { $in: [personName] } }]
+      }).limit(5).toArray();
     }
 
-    if (intents.includes('TRANSPORT') && !intents.includes('PEOPLE')) {
-      context.routes = await this.db.collection('transport_routes').find({
-        $or: [
-          { route_no: { $regex: normalizedQuery, $options: 'i' } },
-          { "stops.stop": { $regex: normalizedQuery, $options: 'i' } }
-        ]
-      }).toArray();
+    if (normalizedQuery.match(/dept|department/i)) {
+        const dName = normalizedQuery.replace(/dept|department/g, '').trim();
+        context.relevantDept = await this.db.collection('structured_data').find({
+            name: { $regex: dName, $options: 'i' }
+        }).limit(2).toArray();
     }
 
+    // Semantic Vector Search (Part 4, Step 2)
     const embedding = await this.getEmbedding(normalizedQuery);
     if (embedding) {
       const results = await this.db.collection('vector_store').find({}).toArray();
       const scored = results.map(doc => ({
         score: doc.embedding.reduce((sum, val, idx) => sum + val * embedding[idx], 0),
         text: doc.text,
-        source: doc.source
-      })).sort((a, b) => b.score - a.score).slice(0, 3);
-      context.vectorMatches = scored.map(s => ({ text: s.text?.substring(0, 300), source: s.source }));
+        source: doc.source || 'Knowledge Base'
+      })).sort((a, b) => b.score - a.score).slice(0, 10); // Part 4, Step 3: Top 10
+      
+      // Re-ranking (Prioritize metadata matches)
+      context.vectorMatches = scored.filter(s => s.score > 0.4).slice(0, 5).map(s => ({ 
+          text: s.text?.substring(0, 300),
+          source: s.source 
+      }));
     }
-
-    await this.setCache(normalizedQuery, context);
     return context;
   }
 

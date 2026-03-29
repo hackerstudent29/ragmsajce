@@ -15,59 +15,89 @@ bot.start((ctx) => {
 
 bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
-    const query = ctx.message.text;
+    let query = ctx.message.text;
 
     try {
         console.log(`[LOG] Query from ${userId}: "${query}"`);
         await ctx.sendChatAction('typing');
 
-        const isPerson = retrievalService.isPersonQuery(query);
-        let finalResponse = "";
-        let report = { steps: ["Starting Request"], tokens: { reasoning: 0, formulation: 0 } };
-
-        if (isPerson) {
-            console.log('[ROUTING] Deterministic Entity Flow');
-            const personResult = await retrievalService.handlePersonQuery(query);
-            
-            if (personResult) {
-                finalResponse = personResult;
-                report.steps.push("Deterministic Entity Match Found");
-                report.steps.push("Database Lookup Successful");
-                report.steps.push("Direct Response Generated (No AI)");
-            } else {
-                console.log('[ROUTING] No entity match, falling back to RAG');
-                report.steps.push("No Direct Entity Match");
-                const context = await retrievalService.retrieve(query);
-                const rag = await ragService.generate(query, context, []);
-                finalResponse = rag.response;
-                report = rag.report;
-            }
-        } else {
-            console.log('[ROUTING] RAG / AI Flow');
-            const context = await retrievalService.retrieve(query);
-            const rag = await ragService.generate(query, context, []);
-            finalResponse = rag.response;
-            report = rag.report;
+        // 1. Session Memory & Pronoun Resolution
+        const user = await userService.getUser(userId) || { last_entity: null, history: [] };
+        if (query.match(/\b(him|her|he|she|that person|them)\b/i) && user.last_entity) {
+            query = query.replace(/\b(him|her|he|she|that person|them)\b/gi, user.last_entity);
+            console.log(`[MEMORY] Resolved pronoun to: "${query}"`);
         }
 
-        // 4. Log to DB for Dashboard
+        // 2. Multi-Query Splitting
+        const queries = retrievalService.splitQuery(query);
+        let finalResponses = [];
+        let combinedReport = { steps: ["Multi-Query Processing"], tokens: { reasoning: 0, formulation: 0 } };
+
+        for (let q of queries) {
+            let response = "";
+            let report = { steps: [], tokens: { reasoning: 0, formulation: 0 } };
+
+            // Determine Domain & Route
+            const isTransport = q.match(/\b(bus|route|stop|ar-|van)\b/i);
+            const isMtc = q.match(/\b(mtc|public transport|333|555)\b/i);
+            const isDept = q.match(/\b(dept|department|hod|office|it|cse|ece|eee|admissions)\b/i);
+            const isPerson = retrievalService.isPersonQuery(q);
+
+            if (isPerson) {
+                response = await retrievalService.handlePersonQuery(q);
+                if (response) {
+                    report.steps.push("Deterministic Person Match");
+                    const nameMatch = response.match(/matching records for "(.*?)"/);
+                    if (nameMatch) user.last_entity = nameMatch[1];
+                }
+            } else if (isDept) {
+                response = await retrievalService.handleDeptQuery(q);
+                if (response) report.steps.push("Deterministic Dept Match");
+            } else if (isTransport) {
+                response = await retrievalService.handleTransportQuery(q);
+                if (response) report.steps.push("Deterministic Transport Match");
+            } else if (isMtc) {
+                response = await retrievalService.handleMtcQuery(q);
+                if (response) report.steps.push("Deterministic MTC Match");
+            }
+
+            // RAG Fallback (Part 13)
+            if (!response) {
+                report.steps.push("No Deterministic Match - Falling back to RAG");
+                const context = await retrievalService.retrieve(q);
+                const rag = await ragService.generate(q, context, user.history.slice(-3));
+                response = rag.response;
+                report = rag.report;
+            }
+
+            finalResponses.push(response);
+            combinedReport.tokens.reasoning += report.tokens.reasoning;
+            combinedReport.tokens.formulation += report.tokens.formulation;
+            combinedReport.steps = [...combinedReport.steps, ...report.steps];
+        }
+
+        const finalResult = finalResponses.join('\n\n---\n\n');
+
+        // 3. Update Session
+        user.history.push({ role: 'user', content: query });
+        user.history.push({ role: 'assistant', content: finalResult });
+        await userService.enroll(userId, user);
+
+        // 4. Log for Dashboard
         try {
             await retrievalService.connect();
             await retrievalService.db.collection('execution_logs').insertOne({
-                userId, query, response: finalResponse,
-                steps: report.steps,
-                tokens: report.tokens,
-                timestamp: new Date(),
-                mode: isPerson && !report.tokens.reasoning ? 'DETERMINISTIC' : 'RAG'
+                userId, query, response: finalResult,
+                steps: combinedReport.steps,
+                tokens: combinedReport.tokens,
+                timestamp: new Date()
             });
         } catch (logErr) { console.error('Log save error:', logErr.message); }
 
-        console.log('[DONE] Sending reply...');
-        await ctx.reply(finalResponse);
-        console.log('[DONE] Reply sent.');
+        await ctx.reply(finalResult);
     } catch (e) {
-        console.error('Bot Pipeline Error:', e.message);
-        ctx.reply("Sorry, I encountered an error. Please try again.");
+        console.error('Bot Error:', e);
+        ctx.reply("System encountered an error. Please try again.");
     }
 });
 
