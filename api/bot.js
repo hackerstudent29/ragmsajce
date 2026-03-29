@@ -61,16 +61,20 @@ async function getReasoning(query, context, history) {
 async function getFinalResponse(query, reasoning, context) {
     try {
         const prompt = `
-            You are MSAJCE Academic Assistant. 
-            User Query: ${query}
-            Analysis: ${reasoning}
-            Context: ${JSON.stringify(context)}
-            STRICT RULES:
-            - REPLY ONLY IN BULLET POINTS.
-            - NO PARAGRAPHS OR BIG BLOCKS OF TEXT.
-            - BE EXTREMELY CONCISE.
-            - USE ONLY THE PROVIDED CONTEXT.
-            - IF DATA IS MISSING, STATE IT IN A BULLET POINT.
+            You are MSAJCE Assistant. Strict mode: Answer ONLY the user's specific question.
+            
+            QUESTION: ${query}
+            REASONING: ${reasoning}
+            DATA: ${JSON.stringify(context)}
+            
+            LAWS:
+            1. DO NOT include "Additional" or "Also" information. 
+            2. If someone is a student, say they are a student.
+            3. If someone is a professor, say they are a professor.
+            4. If the question is about a person, DO NOT talk about bus routes or facilities.
+            5. FORMAT: Use only simple dashes (-) for bullet points.
+            6. STYLE: NO BOLD (**), NO ITALICS (_). USE PLAIN TEXT ONLY.
+            7. If you find multiple matches, list them briefly.
         `;
         const result = await gemini.generateContent(prompt);
         return result.response.text();
