@@ -72,11 +72,12 @@ async function getFinalResponse(query, reasoning, context) {
             
             Grounded Context: ${JSON.stringify(context)}
             
-            TASK: Create a professional, helpful, and concise response. 
-            - Ground your answer ONLY in the provided context.
-            - If data is missing, admit it. 
-            - Mention specific details like driver names, mobile numbers, route timings if relevant.
-            - DO NOT reveal internal reasoning to the user.
+            STRICT RULES:
+            - REPLY ONLY IN BULLET POINTS.
+            - NO PARAGRAPHS OR BIG BLOCKS OF TEXT.
+            - BE EXTREMELY CONCISE.
+            - USE ONLY THE PROVIDED CONTEXT.
+            - IF DATA IS MISSING, STATE IT IN A BULLET POINT.
         `;
         const result = await gemini.generateContent(prompt);
         return result.response.text();
@@ -87,7 +88,7 @@ async function getFinalResponse(query, reasoning, context) {
 }
 
 bot.start((ctx) => {
-    ctx.reply("Welcome to MSAJCE Academic Assistant! I'm here to help with courses, admission, transport routes, and institutional info.");
+    ctx.reply("Hi, I'm MSAJCE Assistant! What assistance do you need today?\n\nI can help you with:\n• Transport (Bus Routes & Timings)\n• Admission Details\n• Personnel & Contacts\n• Department Information\n• Campus Facilities");
 });
 
 bot.on('text', async (ctx) => {

@@ -65,7 +65,12 @@ async function getFinalResponse(query, reasoning, context) {
             User Query: ${query}
             Analysis: ${reasoning}
             Context: ${JSON.stringify(context)}
-            Task: Provide a helpful, concise answer based ONLY on the context. Do not show reasoning.
+            STRICT RULES:
+            - REPLY ONLY IN BULLET POINTS.
+            - NO PARAGRAPHS OR BIG BLOCKS OF TEXT.
+            - BE EXTREMELY CONCISE.
+            - USE ONLY THE PROVIDED CONTEXT.
+            - IF DATA IS MISSING, STATE IT IN A BULLET POINT.
         `;
         const result = await gemini.generateContent(prompt);
         return result.response.text();
@@ -74,7 +79,9 @@ async function getFinalResponse(query, reasoning, context) {
     }
 }
 
-bot.start((ctx) => ctx.reply("MSAJCE Bot Live on Vercel Hooks."));
+bot.start((ctx) => {
+    ctx.reply("Hi, I'm MSAJCE Assistant! What assistance do you need today?\n\nI can help you with:\n• Transport (Bus Routes & Timings)\n• Admission Details\n• Personnel & Contacts\n• Department Information\n• Campus Facilities");
+});
 
 bot.on('text', async (ctx) => {
     const userId = ctx.from.id;
