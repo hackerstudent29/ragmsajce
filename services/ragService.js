@@ -50,7 +50,7 @@ class RAGService {
                 max_tokens: 500
             }, {
                 headers: { 'Authorization': `Bearer ${NVIDIA_API_KEY}`, 'Content-Type': 'application/json' },
-                timeout: 10000
+                timeout: 30000
             });
             return { content: res.data.choices[0].message.content, usage: res.data.usage };
         } catch (e) { 
