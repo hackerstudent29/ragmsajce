@@ -1,0 +1,302 @@
+[
+  {
+    "query": "What courses are offered?",
+    "domain": "RAG_FALLBACK",
+    "response": "We offer the following Under Graduate Programmes:\n- Civil Engineering\n- Computer Science & Engineeri...",
+    "success": true
+  },
+  {
+    "query": "Admission eligibility for B.Tech IT?",
+    "domain": "RAG_FALLBACK",
+    "response": "B.Tech IT admission eligibility:\n\n*   Students who have completed Plus 2 / Diploma may apply for Tam...",
+    "success": true
+  },
+  {
+    "query": "How to apply for admission?",
+    "domain": "RAG_FALLBACK",
+    "response": "- Students who have completed Plus 2 / Diploma may apply for Tamil Nadu Engineering Admissoins (TNEA...",
+    "success": true
+  },
+  {
+    "query": "What is the contact for admissions?",
+    "domain": "RAG_FALLBACK",
+    "response": "For contact information, please use +01 234 567 890, visit www.yourdomain.com, or email contact@your...",
+    "success": true
+  },
+  {
+    "query": "Is there a hostel for boys?",
+    "domain": "RAG_FALLBACK",
+    "response": "*   A home away from home is provided for boys accommodating 480 students.\n*   All the rooms are wel...",
+    "success": true
+  },
+  {
+    "query": "Admission office timings?",
+    "domain": "RAG_FALLBACK",
+    "response": "The admission office hours are:\n- Monday to Friday: 9:00 AM to 8:00 PM\n- Saturday: 10:00 AM to 4:00 ...",
+    "success": true
+  },
+  {
+    "query": "Engineering admissions process?",
+    "domain": "RAG_FALLBACK",
+    "response": "*   Students who have completed Plus 2 / Diploma may apply for Tamil Nadu Engineering Admissoins (TN...",
+    "success": true
+  },
+  {
+    "query": "Direct admission for masters?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "College code for counseling?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\nConfidence: 0%\n...",
+    "success": false
+  },
+  {
+    "query": "Scholarships available?",
+    "domain": "RAG_FALLBACK",
+    "response": "- Scholarship opportunities are available at the district, state, and national levels.\n- The MSAJCE ...",
+    "success": true
+  },
+  {
+    "query": "Bus route AR-5 stops?",
+    "domain": "RAG_FALLBACK",
+    "response": "The AR-5 bus route stops are:\n- MMDA School\n- Anna Nagar\n- Skywalk\n- Saidapet\n- Velachery\n- OMR\n- La...",
+    "success": true
+  },
+  {
+    "query": "Who is the driver for route 22?",
+    "domain": "RAG_FALLBACK",
+    "response": "The driver for route R-22 is Mr. Jaffar (+91-9566037890).\n...",
+    "success": true
+  },
+  {
+    "query": "Earliest bus from college?",
+    "domain": "DETERMINISTIC_TRANSPORT",
+    "response": "EARLIEST BUS TIMINGS:\n\n- 05:25: Chunambedu (Route AR-7)\n- 05:45: Kadapakkam (Route AR-7)\n- 05:50: Ma...",
+    "success": true
+  },
+  {
+    "query": "Bus stops in Sholinganallur?",
+    "domain": "RAG_FALLBACK",
+    "response": "- MSAJCE Bus R-20 stops at Sholinganallur at 07:30 AM. The driver is Mr. M. Suresh (+91-9849265637)....",
+    "success": true
+  },
+  {
+    "query": "Driver contact for route AR-3?",
+    "domain": "RAG_FALLBACK",
+    "response": "The driver for bus route AR-3 is Mr. Sathish K (+91-9789970304).\n...",
+    "success": true
+  },
+  {
+    "query": "How many buses are there?",
+    "domain": "RAG_FALLBACK",
+    "response": "- The college operates 22 buses across Chennai, Kanchipuram, and Thiruvallur. Confidence: {100}%\n...",
+    "success": true
+  },
+  {
+    "query": "Public transport to college?",
+    "domain": "RAG_FALLBACK",
+    "response": "- The College is easily accessible from Chennai Central Railway Station, Tambaram Railway Station an...",
+    "success": true
+  },
+  {
+    "query": "Route 15 driver contact?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information....",
+    "success": false
+  },
+  {
+    "query": "Is there a bus to Adambakkam?",
+    "domain": "RAG_FALLBACK",
+    "response": "- MSAJCE Bus R-20 stops at Adyar at 07:05 AM. The driver is Mr. M. Suresh (+91-9849265637).\n- MSAJCE...",
+    "success": true
+  },
+  {
+    "query": "Which bus goes to Velachery?",
+    "domain": "RAG_FALLBACK",
+    "response": "- MSAJCE Bus R-22 stops at Velachery Bypass at 06:45 AM. The driver is Mr. Jaffar (+91-9566037890).\n...",
+    "success": true
+  },
+  {
+    "query": "Route 20 stop timings?",
+    "domain": "RAG_FALLBACK",
+    "response": "MSAJCE Bus R-20 stop times:\n- Dowton at 06:20 AM.\n- Central at 06:25 AM.\n- Santhome at 07:00 AM.\n- N...",
+    "success": true
+  },
+  {
+    "query": "Who is the Principal?",
+    "domain": "RAG_FALLBACK",
+    "response": "- The Principal of MSAJCE is Dr. K.S. SRINIVASAN. Confidence: {100}%\n...",
+    "success": true
+  },
+  {
+    "query": "Who is the HOD of IT?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "Tell me about Yogesh R",
+    "domain": "DETERMINISTIC_PERSON",
+    "response": "I found matches for \"yogesh r\" (ranked by relevance):\n\nFACULTY & STAFF:\n- Dr. Elliss Yogesh R\n  Role...",
+    "success": true
+  },
+  {
+    "query": "Who is Ramanathan S?",
+    "domain": "DETERMINISTIC_PERSON",
+    "response": "I found matches for \"ramanathan s?\" (ranked by relevance):\n\nSTUDENT RECORDS:\n- Ramanathan S\n  Role: ...",
+    "success": true
+  },
+  {
+    "query": "Dr. Srinivasan CSE department",
+    "domain": "RAG_FALLBACK",
+    "response": "- Dr. K.S. SRINIVASAN is the Principal of MSAJCE. {100%}\n...",
+    "success": true
+  },
+  {
+    "query": "HOD of CSE?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "HOD of EEE department?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "Who is Karthikeyan?",
+    "domain": "DETERMINISTIC_PERSON",
+    "response": "I found matches for \"karthikeyan?\" (ranked by relevance):\n\nFACULTY & STAFF:\n- Dr. Karthikeyan\n  Role...",
+    "success": true
+  },
+  {
+    "query": "Who is the Registrar?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "Dr. Santhosh Nathan transport?",
+    "domain": "RAG_FALLBACK",
+    "response": "Here's what I found regarding transport records for Dr. Santhosh Nathan:\n\n*   Dr. K. P. Santhosh Nat...",
+    "success": true
+  },
+  {
+    "query": "Library facilities?",
+    "domain": "RAG_FALLBACK",
+    "response": "- The library is housed in a spacious area of 8978 Sq.ft, (Ground Floor and Ist Floor).\n- The librar...",
+    "success": true
+  },
+  {
+    "query": "Placement information for 2024?",
+    "domain": "RAG_FALLBACK",
+    "response": "- 90% of students were placed.\n- Top recruiters included TCS, CTS, and Infosys.\n- Confidence: 100%\n...",
+    "success": true
+  },
+  {
+    "query": "History of MSAJCE?",
+    "domain": "RAG_FALLBACK",
+    "response": "- MSAJCE was established in 2001 by the Mohamed Sathak Trust.\n- It is an ISO 9001:2015 certified ins...",
+    "success": true
+  },
+  {
+    "query": "College timings?",
+    "domain": "RAG_FALLBACK",
+    "response": "College timings are from 8:30 AM to 3:45 PM for all departments.\nConfidence: 100%\n...",
+    "success": true
+  },
+  {
+    "query": "Vision and mission?",
+    "domain": "RAG_FALLBACK",
+    "response": "- Vision: “To be an eminent institute for higher education and research through innovative teaching-...",
+    "success": false
+  },
+  {
+    "query": "Hostel facilities for girls?",
+    "domain": "RAG_FALLBACK",
+    "response": "- A home away from home is provided for girl students, accommodating 210 students.\n- All the rooms a...",
+    "success": true
+  },
+  {
+    "query": "Canteen facilities?",
+    "domain": "RAG_FALLBACK",
+    "response": "- The cafeteria is provided with modern furniture, electrical cooking and storing facilities.\n- It p...",
+    "success": true
+  },
+  {
+    "query": "Sports and recreation?",
+    "domain": "RAG_FALLBACK",
+    "response": "- Sports activities are conducted at both inter and intra college levels.\n- Games include Outdoor Cr...",
+    "success": true
+  },
+  {
+    "query": "Auditorium information?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "Is the college ISO certified?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "Which university is it affiliated to?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  },
+  {
+    "query": "When was it established?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\nConfidence: 0%\n...",
+    "success": false
+  },
+  {
+    "query": "Placement record 2023?",
+    "domain": "RAG_FALLBACK",
+    "response": "- 90% of students were placed in the 2024 placement season.\n- Top recruiters included TCS, CTS, and ...",
+    "success": true
+  },
+  {
+    "query": "Placement record 2024?",
+    "domain": "RAG_FALLBACK",
+    "response": "- 90% of students were placed in the 2024 placement season.\n- Top recruiters included TCS, CTS, and ...",
+    "success": true
+  },
+  {
+    "query": "Hostel fee structure?",
+    "domain": "RAG_FALLBACK",
+    "response": "- Mess charges are collected on an annual basis at the time of admission.\n- A home away from home pr...",
+    "success": true
+  },
+  {
+    "query": "Boys hostel details?",
+    "domain": "RAG_FALLBACK",
+    "response": "*   A home away from home is provided for boys accommodating 480 students.\n*   All the rooms are wel...",
+    "success": true
+  },
+  {
+    "query": "Girls hostel details?",
+    "domain": "RAG_FALLBACK",
+    "response": "*   A home away from home is provided for girl students.\n*   The hostel accommodates 210 girl studen...",
+    "success": true
+  },
+  {
+    "query": "IT department details?",
+    "domain": "RAG_FALLBACK",
+    "response": "- Professor Department of IT 9715202533 it.weslin@msajce-edu.in\n- CSI OFFICE BEARERS NAME DEPARTMENT...",
+    "success": true
+  },
+  {
+    "query": "CSE office?",
+    "domain": "RAG_FALLBACK",
+    "response": "I couldn't find that information.\n...",
+    "success": false
+  }
+]

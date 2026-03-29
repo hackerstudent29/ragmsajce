@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { MongoClient } = require('mongodb');
 const dotenv = require('dotenv');
+const retrievalService = require('../services/retrievalService');
 
 dotenv.config();
 
@@ -18,14 +19,13 @@ const normalize = (str) => {
               .trim();
 };
 
-// Alias Generation (Part 9)
 const generateAliases = (name) => {
     const n = normalize(name);
     const parts = n.split(' ');
     const aliases = new Set([n]);
     if (parts.length > 1) {
-        aliases.add(parts[parts.length - 1]); // Last name
-        aliases.add(parts[0]); // First name
+        aliases.add(parts[parts.length - 1]);
+        aliases.add(parts[0]);
     }
     return Array.from(aliases);
 };
@@ -45,24 +45,23 @@ const runPipeline = async () => {
     const routes = [];
     const stops = [];
     const mtc = [];
-    const departments = [];
 
-    // 2. Process Personal Profile (Part 6)
+    // 2. Process Personal Profile
     if (data.personal_profile) {
         const p = data.personal_profile;
         people.push({
             name: p.full_name,
             normalized_name: normalize(p.full_name),
             aliases: [...generateAliases(p.full_name), ...(p.preferred_name || [])],
-            role: 'User Profile / B.Tech IT Student',
+            role: 'Developer / B.Tech IT Student',
             department: 'Information Technology',
             education: p.education,
             projects: p.projects,
-            type: 'PERSON'
+            type: 'STUDENT'
         });
     }
 
-    // 3. Process Transportation (Detailed Routes)
+    // 3. Process Transportation
     if (data.transportation && data.transportation.transport_detailed_routes) {
         data.transportation.transport_detailed_routes.forEach(r => {
             routes.push({
@@ -71,7 +70,6 @@ const runPipeline = async () => {
                 phone: r.driver.mobile,
                 type: 'COLLEGE_BUS'
             });
-
             r.stops.forEach(s => {
                 stops.push({
                     stop: s.stop,
@@ -83,7 +81,6 @@ const runPipeline = async () => {
         });
     }
 
-    // 4. Process MTC (Public Transport)
     if (data.transportation && data.transportation.public_transport_mtc) {
         data.transportation.public_transport_mtc.routes.forEach(r => {
             mtc.push({
@@ -96,80 +93,75 @@ const runPipeline = async () => {
         });
     }
 
-    // 5. Atomic File Storage (Part 10)
-    const structured = [
-        { name: 'Admissions Office', hod: 'Registrar', contact: '044-27470025', type: 'ADMIN' },
-        { name: 'Information Technology', code: 'IT', hod: 'Dr. Elliss Yogesh R', type: 'DEPT' },
-        { name: 'Computer Science', code: 'CSE', hod: 'Dr. Srinivasan', type: 'DEPT' },
-        { name: 'Transport Office', hod: 'Dr. K.P. Santhosh Nathan', contact: '98408 86992', type: 'ADMIN' }
-    ];
-
-    fs.writeFileSync(path.join(__dirname, '../structured_data/people.json'), JSON.stringify(people, null, 2));
-    fs.writeFileSync(path.join(__dirname, '../structured_data/transport_routes.json'), JSON.stringify(routes, null, 2));
-    fs.writeFileSync(path.join(__dirname, '../structured_data/transport_stops.json'), JSON.stringify(stops, null, 2));
-    fs.writeFileSync(path.join(__dirname, '../structured_data/mtc_routes.json'), JSON.stringify(mtc, null, 2));
-    fs.writeFileSync(path.join(__dirname, '../structured_data/structured_data.json'), JSON.stringify(structured, null, 2));
-
     // 4. Global Analysis (Part 5) & Institutional Leaders
+    const now = new Date();
     const structured = [
-        { name: 'Admissions Office', hod: 'Registrar', contact: '044-27470025', type: 'ADMIN' },
-        { name: 'Information Technology', code: 'IT', hod: 'Dr. Elliss Yogesh R', type: 'DEPT' },
-        { name: 'Computer Science', code: 'CSE', hod: 'Dr. Srinivasan', type: 'DEPT' },
-        { name: 'Transport Office', hod: 'Dr. K.P. Santhosh Nathan', contact: '98408 86992', type: 'ADMIN' }
+        { name: 'Admissions Office', hod: 'Registrar', contact: '044-27470025', type: 'ADMIN', last_updated: now },
+        { name: 'Information Technology', code: 'IT', hod: 'Dr. Elliss Yogesh R', type: 'DEPT', last_updated: now },
+        { name: 'Computer Science', code: 'CSE', hod: 'Dr. Srinivasan', type: 'DEPT', last_updated: now },
+        { name: 'Electrical & Electronics', code: 'EEE', hod: 'Dr. Karthikeyan', type: 'DEPT', last_updated: now },
+        { name: 'Transport Office', hod: 'Dr. K.P. Santhosh Nathan', contact: '98408 86992', type: 'ADMIN', last_updated: now }
     ];
 
-    // Add HODs to People for Part 5 Routing
+    const knowledge = [
+        { category: 'HISTORY', text: 'MSAJCE was established in 2001 by the Mohamed Sathak Trust. It is an ISO 9001:2015 certified institution affiliated with Anna University.', last_updated: now },
+        { category: 'GENERAL', text: 'College timings are from 8:30 AM to 3:45 PM for all departments.', last_updated: now },
+        { category: 'PLACEMENT', text: 'The 2024 placement season saw 90% students placed with top recruiters like TCS, CTS, and Infosys.', last_updated: now },
+        { category: 'TRANSPORT', text: 'The college operates 22 buses across Chennai, Kanchipuram, and Thiruvallur. Total 22 institutional vehicles.', last_updated: now }
+    ];
+
     structured.forEach(s => {
         if (s.hod && s.hod !== 'Registrar') {
+            const normalizedHOD = normalize(s.hod);
             people.push({
                 name: s.hod,
-                normalized_name: normalize(s.hod),
-                aliases: generateAliases(s.hod),
-                role: `HOD of ${s.name}`,
+                normalized_name: normalizedHOD,
+                aliases: [...generateAliases(s.hod), s.hod.toLowerCase(), normalizedHOD],
+                role: `HOD of ${s.name} (${s.code || 'Admin'})`,
                 department: s.name,
                 type: 'FACULTY'
             });
         }
     });
 
-    const now = new Date();
     const validate = (list, requiredFields) => list.filter(item => {
-        const isValid = requiredFields.every(f => item[f] && item[f].toString().trim().length > 0);
-        return isValid;
+        return requiredFields.every(f => item[f] && item[f].toString().trim().length > 0);
     });
 
     const peopleWithTime = validate(people, ['normalized_name']).map(p => ({ 
         ...p, last_updated: now, aliases: [...new Set(p.aliases)]
     }));
-
-    // ... (rest of sync logic) ...
     const routesWithTime = validate(routes, ['route_no']).map(r => ({ ...r, last_updated: now }));
     const stopsWithTime = validate(stops, ['stop', 'route_no']).map(s => ({ ...s, last_updated: now }));
     const mtcWithTime = validate(mtc, ['route_no']).map(m => ({ ...m, last_updated: now }));
 
-    // ... (rest of sync logic) ...
-
+    // 5. DB Sync (Part 2)
     const client = new MongoClient(MONGO_URI);
     try {
         await client.connect();
         const db = client.db(DB_NAME);
-        
         console.log('[SYNC] Database Integration...');
-        
+
         await db.collection('entities_master').deleteMany({});
         if (peopleWithTime.length > 0) await db.collection('entities_master').insertMany(peopleWithTime);
-        
+
         await db.collection('transport_routes').deleteMany({});
         if (routesWithTime.length > 0) await db.collection('transport_routes').insertMany(routesWithTime);
-        
+
         await db.collection('transport_stops').deleteMany({});
         if (stopsWithTime.length > 0) await db.collection('transport_stops').insertMany(stopsWithTime);
-        
+
         await db.collection('mtc_routes').deleteMany({});
         if (mtcWithTime.length > 0) await db.collection('mtc_routes').insertMany(mtcWithTime);
 
         await db.collection('structured_data').deleteMany({});
-        if (structuredWithTime.length > 0) await db.collection('structured_data').insertMany(structuredWithTime);
+        if (structured.length > 0) await db.collection('structured_data').insertMany(structured);
+
+        await db.collection('vector_store').deleteMany({ category: { $in: ['HISTORY', 'PLACEMENT', 'GENERAL', 'TRANSPORT'] } });
+        for (const chunk of knowledge) {
+            const embedding = await retrievalService.getEmbedding(chunk.text);
+            if (embedding) await db.collection('vector_store').insertOne({ ...chunk, embedding });
+        }
 
         console.log('[SUCCESS] Production System Data Ingested With Timestamps.');
     } catch (e) {

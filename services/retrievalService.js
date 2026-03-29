@@ -60,7 +60,11 @@ class RetrievalService {
     const intents = [];
     if (q.includes('bus') || q.includes('route') || q.includes('ar-') || q.includes('transport') || q.includes('stop')) intents.push('TRANSPORT');
     if (q.includes('admission') || q.includes('fee') || q.includes('eligibility') || q.includes('apply')) intents.push('ADMISSION');
-    if (q.includes('who is') || q.includes('tell me') || q.includes('abt') || q.includes('about') || q.includes('principal') || q.includes('professor') || q.includes('staff') || q.includes('hod')) intents.push('PEOPLE');
+    
+    // Part 5: Specialized Routing (HOD priority)
+    if (q.includes('hod') || q.includes('head of')) intents.push('DEPT');
+    else if (q.includes('who is') || q.includes('tell me') || q.includes('abt') || q.includes('about') || q.includes('principal') || q.includes('professor') || q.includes('staff')) intents.push('PEOPLE');
+    
     if (q.includes('infra') || q.includes('library') || q.includes('hostel')) intents.push('FACILITIES');
     
     const depts = ['it', 'cse', 'ece', 'eee', 'civil', 'mech', 'aids', 'aiml', 'cyber'];
@@ -72,14 +76,17 @@ class RetrievalService {
   // Extract the actual person name from queries like 'who is ram' or 'tell me abt yogesh r'
   extractPersonName(query) {
     const q = query.toLowerCase().trim();
-    return q.replace(/^(who is|tell me about|tell me abt|about|abt|find)\s*/i, '').trim();
+    return q.replace(/^(who is|tell me about|tell me abt|about|abt|find|the)\s*/i, '')
+            .replace(/\b(hod|head of|professor|dr|principal)\b\s*/gi, '')
+            .trim();
   }
 
   // --- NEW: STRICT ENTITY ROUTING ---
   isPersonQuery(query) {
     const q = query.toLowerCase();
-    const triggers = ['who is', 'tell me about', 'tell me abt', 'abt', 'about', 'principal', 'professor', 'hod', 'staff', 'chairman', 'secretary'];
-    return triggers.some(t => q.includes(t));
+    const triggers = ['who is', 'tell me about', 'tell me abt', 'abt', 'about', 'principal', 'professor', 'staff', 'chairman', 'secretary'];
+    // Avoid double routing HOD to Person path
+    return triggers.some(t => q.includes(t)) && !q.includes('hod');
   }
 
   async handlePersonQuery(query) {
@@ -135,10 +142,29 @@ class RetrievalService {
     });
   }
 
+  async handleDeptQuery(query) {
+    await this.connect();
+    const normalized = query.toLowerCase().replace(/dept|department/g, '').trim();
+    const depts = await this.db.collection('structured_data').find({
+        $or: [ { name: { $regex: normalized, $options: 'i' } }, { code: { $regex: normalized, $options: 'i' } } ]
+    }).toArray();
+    if (depts.length === 0) return null;
+    let output = "DEPARTMENT INFO:\n\n";
+    depts.forEach(d => output += `- ${d.name}\n  Head: ${d.hod || 'N/A'}\n  Contact: ${d.contact || 'N/A'}\n\n`);
+    return output.trim();
+  }
+
   // --- MODULE 3: COMPUTATION LAYER ---
   async handleLogicalTransportQuery(query) {
     await this.connect();
     const q = query.toLowerCase();
+    
+    // Part 9: Computation (Counting)
+    if (q.includes('how many bus')) {
+        const count = await this.db.collection('transport_routes').countDocuments({});
+        return `The college operates a total of ${count} institutional buses covering multiple routes across Chennai and surroundings.`;
+    }
+
     if (q.includes('earliest') || q.includes('first bus')) {
         const stops = await this.db.collection('transport_stops').find({}).sort({ time: 1 }).limit(5).toArray();
         let out = "EARLIEST BUS TIMINGS:\n\n";
