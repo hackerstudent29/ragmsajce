@@ -76,22 +76,34 @@ FORMAT:
         model: 'google/gemini-2.0-flash-001',
         messages: [{ role: 'system', content: prompt }],
         temperature: 0.1,
-        max_tokens: 1500
+        max_tokens: 1000
       }, {
         headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
-        timeout: 20000
+        timeout: 25000
       });
 
       let text = response.data.choices[0].message.content;
-      console.log(`[RAG] Response generated: ${text.substring(0, 100)}...`);
+      console.log(`[RAG] Response generated: ${text.substring(0, 50)}...`);
       const confidence = this.calculateConfidence(context, text);
       text = text.replace('{SCORE}', confidence);
 
       return { response: text, report };
     } catch (e) {
       console.error(`[RAG] Generation failed: ${e.message}`);
-      return { response: "Internal error processing the reply. Please retry.", report };
+      if (e.message.includes('402')) {
+          console.warn('[RAG] Credits issue detected. Attempting free model fallback...');
+          try {
+              const fallback = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                    model: 'google/gemini-2.0-flash-lite-preview-001:free',
+                    messages: [{ role: 'system', content: prompt }],
+                    temperature: 0.1
+                }, { headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}` }, timeout: 20000 });
+              return { response: fallback.data.choices[0].message.content.replace('{SCORE}', '50'), report };
+          } catch (f) {}
+      }
+      return { response: "I'm having trouble connecting to my knowledge base right now. Please try again in a moment.", report };
     }
+
   }
 }
 

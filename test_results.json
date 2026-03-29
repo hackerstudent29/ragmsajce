@@ -2,13 +2,13 @@
   {
     "query": "What courses are offered?",
     "domain": "RAG_FALLBACK",
-    "response": "We offer the following Under Graduate Programmes:\n- Civil Engineering\n- Computer Science & Engineeri...",
+    "response": "The courses offered are:\n- Civil Engineering\n- Computer Science & Engineering\n- Electronics & Commun...",
     "success": true
   },
   {
     "query": "Admission eligibility for B.Tech IT?",
     "domain": "RAG_FALLBACK",
-    "response": "B.Tech IT admission eligibility:\n\n*   Students who have completed Plus 2 / Diploma may apply for Tam...",
+    "response": "To be eligible for B.Tech IT:\n- Students who have completed Plus 2 / Diploma may apply for Tamil Nad...",
     "success": true
   },
   {
@@ -26,20 +26,20 @@
   {
     "query": "Is there a hostel for boys?",
     "domain": "RAG_FALLBACK",
-    "response": "*   A home away from home is provided for boys accommodating 480 students.\n*   All the rooms are wel...",
+    "response": "Yes, there is a hostel for boys accommodating 480 students.\nConfidence: 100%...",
     "success": true
   },
   {
     "query": "Admission office timings?",
     "domain": "RAG_FALLBACK",
-    "response": "The admission office hours are:\n- Monday to Friday: 9:00 AM to 8:00 PM\n- Saturday: 10:00 AM to 4:00 ...",
+    "response": "The admission office timings are:\n- Monday to Friday: 9:00 AM to 8:00 PM\n- Saturday: 10:00 AM to 4:0...",
     "success": true
   },
   {
     "query": "Engineering admissions process?",
     "domain": "RAG_FALLBACK",
-    "response": "*   Students who have completed Plus 2 / Diploma may apply for Tamil Nadu Engineering Admissoins (TN...",
-    "success": true
+    "response": "I couldn't find that information....",
+    "success": false
   },
   {
     "query": "Direct admission for masters?",
@@ -50,25 +50,25 @@
   {
     "query": "College code for counseling?",
     "domain": "RAG_FALLBACK",
-    "response": "I couldn't find that information.\nConfidence: 0%\n...",
+    "response": "I couldn't find that information....",
     "success": false
   },
   {
     "query": "Scholarships available?",
     "domain": "RAG_FALLBACK",
-    "response": "- Scholarship opportunities are available at the district, state, and national levels.\n- The MSAJCE ...",
+    "response": "- The MSAJCE Alumni Association provides financial assistance and scholarships to needy students thr...",
     "success": true
   },
   {
     "query": "Bus route AR-5 stops?",
-    "domain": "RAG_FALLBACK",
-    "response": "The AR-5 bus route stops are:\n- MMDA School\n- Anna Nagar\n- Skywalk\n- Saidapet\n- Velachery\n- OMR\n- La...",
+    "domain": "DETERMINISTIC_TRANSPORT",
+    "response": "ROUTE AR-5 INFO:\n\nDriver: Mr. Velu\nPhone: +91-9940050685\n\nSTOPS (17 total):\n- 06:15: MMDA School\n- 0...",
     "success": true
   },
   {
     "query": "Who is the driver for route 22?",
-    "domain": "RAG_FALLBACK",
-    "response": "The driver for route R-22 is Mr. Jaffar (+91-9566037890).\n...",
+    "domain": "DETERMINISTIC_TRANSPORT",
+    "response": "ROUTE R-22 INFO:\n\nDriver: Mr. Venkatesan\nPhone: 97890 28549\n\nSTOPS (8 total):\n- 06:00: Nemilichery\n-...",
     "success": true
   },
   {
@@ -80,25 +80,25 @@
   {
     "query": "Bus stops in Sholinganallur?",
     "domain": "RAG_FALLBACK",
-    "response": "- MSAJCE Bus R-20 stops at Sholinganallur at 07:30 AM. The driver is Mr. M. Suresh (+91-9849265637)....",
+    "response": "MSAJCE Bus R-20 stops at Sholinganallur at 07:30 AM. The driver is Mr. M. Suresh (+91-9849265637).\n-...",
     "success": true
   },
   {
     "query": "Driver contact for route AR-3?",
-    "domain": "RAG_FALLBACK",
-    "response": "The driver for bus route AR-3 is Mr. Sathish K (+91-9789970304).\n...",
+    "domain": "DETERMINISTIC_TRANSPORT",
+    "response": "ROUTE AR-3 INFO:\n\nDriver: Mr. Sathish K\nPhone: +91-9789970304\n\nSTOPS (15 total):\n- 06:20: G.H Hospit...",
     "success": true
   },
   {
     "query": "How many buses are there?",
     "domain": "RAG_FALLBACK",
-    "response": "- The college operates 22 buses across Chennai, Kanchipuram, and Thiruvallur. Confidence: {100}%\n...",
+    "response": "- The college operates 22 buses across Chennai, Kanchipuram, and Thiruvallur. Confidence: {100}%...",
     "success": true
   },
   {
     "query": "Public transport to college?",
     "domain": "RAG_FALLBACK",
-    "response": "- The College is easily accessible from Chennai Central Railway Station, Tambaram Railway Station an...",
+    "response": "- The college is easily accessible from Chennai Central Railway Station, Tambaram Railway Station an...",
     "success": true
   },
   {
@@ -110,25 +110,25 @@
   {
     "query": "Is there a bus to Adambakkam?",
     "domain": "RAG_FALLBACK",
-    "response": "- MSAJCE Bus R-20 stops at Adyar at 07:05 AM. The driver is Mr. M. Suresh (+91-9849265637).\n- MSAJCE...",
+    "response": "- Bus routes include: 102 Broadway to Kelambakkam Marina, Adyar, OMR (Daily, 7), B19 Shollinganallur...",
     "success": true
   },
   {
     "query": "Which bus goes to Velachery?",
     "domain": "RAG_FALLBACK",
-    "response": "- MSAJCE Bus R-22 stops at Velachery Bypass at 06:45 AM. The driver is Mr. Jaffar (+91-9566037890).\n...",
+    "response": "- Public MTC Bus Route 570 connects CMBT to Kelambakkam via Vadapalani, Velachery, SRP. Confidence: ...",
     "success": true
   },
   {
     "query": "Route 20 stop timings?",
     "domain": "RAG_FALLBACK",
-    "response": "MSAJCE Bus R-20 stop times:\n- Dowton at 06:20 AM.\n- Central at 06:25 AM.\n- Santhome at 07:00 AM.\n- N...",
+    "response": "MSAJCE Bus R-20:\n- Stops at Dowton at 06:20 AM.\n- Stops at Central at 06:25 AM.\n- Stops at Neelankar...",
     "success": true
   },
   {
     "query": "Who is the Principal?",
     "domain": "RAG_FALLBACK",
-    "response": "- The Principal of MSAJCE is Dr. K.S. SRINIVASAN. Confidence: {100}%\n...",
+    "response": "The Principal of MSAJCE is Dr. K.S. SRINIVASAN.\n- Confidence: 100%\n...",
     "success": true
   },
   {
@@ -140,20 +140,20 @@
   {
     "query": "Tell me about Yogesh R",
     "domain": "DETERMINISTIC_PERSON",
-    "response": "I found matches for \"yogesh r\" (ranked by relevance):\n\nFACULTY & STAFF:\n- Dr. Elliss Yogesh R\n  Role...",
+    "response": "Results for \"yogesh r\":\n\nSOCIETY OFFICE BEARERS:\n- Yogesh R\n  Role: CSI President (Information Techn...",
     "success": true
   },
   {
     "query": "Who is Ramanathan S?",
     "domain": "DETERMINISTIC_PERSON",
-    "response": "I found matches for \"ramanathan s?\" (ranked by relevance):\n\nSTUDENT RECORDS:\n- Ramanathan S\n  Role: ...",
+    "response": "Results for \"ramanathan s\":\n\nSTUDENTS:\n- Ramanathan S\n  Role: Developer / B.Tech IT Student (Informa...",
     "success": true
   },
   {
     "query": "Dr. Srinivasan CSE department",
     "domain": "RAG_FALLBACK",
-    "response": "- Dr. K.S. SRINIVASAN is the Principal of MSAJCE. {100%}\n...",
-    "success": true
+    "response": "I couldn't find that information....",
+    "success": false
   },
   {
     "query": "HOD of CSE?",
@@ -170,7 +170,7 @@
   {
     "query": "Who is Karthikeyan?",
     "domain": "DETERMINISTIC_PERSON",
-    "response": "I found matches for \"karthikeyan?\" (ranked by relevance):\n\nFACULTY & STAFF:\n- Dr. Karthikeyan\n  Role...",
+    "response": "Results for \"karthikeyan\":\n\nFACULTY & STAFF:\n- Dr. Karthikeyan\n  Role: HOD of Electrical & Electroni...",
     "success": true
   },
   {
@@ -182,13 +182,13 @@
   {
     "query": "Dr. Santhosh Nathan transport?",
     "domain": "RAG_FALLBACK",
-    "response": "Here's what I found regarding transport records for Dr. Santhosh Nathan:\n\n*   Dr. K. P. Santhosh Nat...",
+    "response": "*   Dr. K. P. Santhosh Nathan is the Transport Convener of MSAJCE.\n*   Contact: 98408 86992.\n*   Mr....",
     "success": true
   },
   {
     "query": "Library facilities?",
     "domain": "RAG_FALLBACK",
-    "response": "- The library is housed in a spacious area of 8978 Sq.ft, (Ground Floor and Ist Floor).\n- The librar...",
+    "response": "- The library is housed in a spacious area of 8978 Sq.ft, (Ground Floor and Ist Floor) fully compute...",
     "success": true
   },
   {
@@ -213,12 +213,12 @@
     "query": "Vision and mission?",
     "domain": "RAG_FALLBACK",
     "response": "- Vision: “To be an eminent institute for higher education and research through innovative teaching-...",
-    "success": false
+    "success": true
   },
   {
     "query": "Hostel facilities for girls?",
     "domain": "RAG_FALLBACK",
-    "response": "- A home away from home is provided for girl students, accommodating 210 students.\n- All the rooms a...",
+    "response": "- A home away from home is provided for girl students, accommodating 210 students.\n- All rooms are w...",
     "success": true
   },
   {
@@ -242,7 +242,7 @@
   {
     "query": "Is the college ISO certified?",
     "domain": "RAG_FALLBACK",
-    "response": "I couldn't find that information.\n...",
+    "response": "I couldn't find that information....",
     "success": false
   },
   {
@@ -260,19 +260,19 @@
   {
     "query": "Placement record 2023?",
     "domain": "RAG_FALLBACK",
-    "response": "- 90% of students were placed in the 2024 placement season.\n- Top recruiters included TCS, CTS, and ...",
+    "response": "- The 2024 placement season saw 90% students placed with top recruiters like TCS, CTS, and Infosys.\n...",
     "success": true
   },
   {
     "query": "Placement record 2024?",
     "domain": "RAG_FALLBACK",
-    "response": "- 90% of students were placed in the 2024 placement season.\n- Top recruiters included TCS, CTS, and ...",
+    "response": "- The 2024 placement season saw 90% students placed with top recruiters like TCS, CTS, and Infosys.\n...",
     "success": true
   },
   {
     "query": "Hostel fee structure?",
     "domain": "RAG_FALLBACK",
-    "response": "- Mess charges are collected on an annual basis at the time of admission.\n- A home away from home pr...",
+    "response": "- Mess charges are collected on an annual basis at the time of admission.\n- Separate hostel accommod...",
     "success": true
   },
   {
@@ -284,7 +284,7 @@
   {
     "query": "Girls hostel details?",
     "domain": "RAG_FALLBACK",
-    "response": "*   A home away from home is provided for girl students.\n*   The hostel accommodates 210 girl studen...",
+    "response": "- A home away from home is provided for girl students.\n- The girls hostel accommodates 210 girl stud...",
     "success": true
   },
   {
@@ -295,8 +295,8 @@
   },
   {
     "query": "CSE office?",
-    "domain": "RAG_FALLBACK",
-    "response": "I couldn't find that information.\n...",
-    "success": false
+    "domain": "DETERMINISTIC_DEPT",
+    "response": "DEPARTMENT INFO:\n\n- Computer Science (CSE)\n  Head: Dr. Srinivasan\n  Contact: N/A...",
+    "success": true
   }
 ]

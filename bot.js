@@ -15,6 +15,15 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
+// Added at the top of the file for global stability
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('[CRITICAL] Uncaught Exception:', err);
+});
+
 async function processQuery(ctx) {
     const userId = ctx.from.id;
     let query = ctx.message.text;
@@ -46,10 +55,10 @@ async function processQuery(ctx) {
             const isDept = retrievalService.isDeptQuery(q);
             const isMtc = q.match(/\b(mtc|public transport|333|555)\b/i);
 
-            console.log(`[BOT] Investigating query "${q}" [Person: ${isPerson}, Transport: ${isTransport}, Dept: ${isDept}, MTC: ${isMtc}]`);
+            console.log(`[BOT] Investigating "${q}" [P: ${isPerson}, T: ${isTransport}, D: ${isDept}, M: ${!!isMtc}]`);
 
             if (isPerson) {
-                console.log(`[BOT] Calling handlePersonQuery for "${q}"`);
+                console.log(`[BOT] Calling handlePersonQuery`);
                 response = await retrievalService.handlePersonQuery(q);
                 if (response) {
                     report.steps.push("Deterministic Person Match");
@@ -57,44 +66,45 @@ async function processQuery(ctx) {
                     if (nameMatch) user.last_entity = nameMatch[1];
                 }
             } else if (isDept) {
-                console.log(`[BOT] Calling handleDeptQuery for "${q}"`);
+                console.log(`[BOT] Calling handleDeptQuery`);
                 response = await retrievalService.handleDeptQuery(q);
                 if (response) report.steps.push("Deterministic Dept Match");
             } else if (isTransport) {
-                console.log(`[BOT] Calling handleTransportQuery for "${q}"`);
+                console.log(`[BOT] Calling handleTransportQuery`);
                 response = await retrievalService.handleTransportQuery(q);
                 if (response) report.steps.push("Deterministic Transport Match");
             } else if (isMtc) {
-                console.log(`[BOT] Calling handleMtcQuery for "${q}"`);
+                console.log(`[BOT] Calling handleMtcQuery`);
                 response = await retrievalService.handleMtcQuery(q);
                 if (response) report.steps.push("Deterministic MTC Match");
             }
 
-            // RAG Fallback (Part 13)
+            // RAG Fallback
             if (!response) {
-                console.log(`[BOT] No deterministic match, falling back to RAG for "${q}"`);
+                console.log(`[BOT] No deterministic match, falling back to RAG`);
                 report.steps.push("No Deterministic Match - Falling back to RAG");
                 
-                console.log(`[BOT] Calling retrievalService.retrieve for context`);
-                const context = await retrievalService.retrieve(q);
-                console.log(`[BOT] Context retrieved: ${context.people.length} people, ${context.vectorMatches.length} knowledge items`);
+                try {
+                    const context = await retrievalService.retrieve(q);
+                    console.log(`[BOT] Context: ${context.people.length} people, ${context.vectorMatches.length} knowledge items`);
 
-                // Module 4: Feedback Loop (Detect Gaps)
-                if (context.people.length === 0 && (!context.routes || context.routes.length === 0) && context.vectorMatches.length === 0) {
-                    console.log(`[FEEDBACK] Data gap detected for: "${q}"`);
-                    try {
-                        await retrievalService.connect();
-                        await retrievalService.db.collection('failed_queries').insertOne({
-                            query: q, userId, timestamp: new Date(), type: 'DATA_GAP'
-                        });
-                    } catch (e) {}
+                    // Module 4: Feedback Loop
+                    if (context.people.length === 0 && (!context.routes || context.routes.length === 0) && context.vectorMatches.length === 0) {
+                        try {
+                            await retrievalService.connect();
+                            await retrievalService.db.collection('failed_queries').insertOne({
+                                query: q, userId, timestamp: new Date(), type: 'DATA_GAP'
+                            });
+                        } catch (e) {}
+                    }
+
+                    const rag = await ragService.generate(q, context, user.history.slice(-3));
+                    response = rag.response;
+                    report = rag.report;
+                } catch (ragErr) {
+                    console.error('[BOT] RAG Pipeline Error:', ragErr.message);
+                    response = "I encountered an error retrieving that information. Please try a simpler query.";
                 }
-
-                console.log(`[BOT] Calling ragService.generate for "${q}"`);
-                const rag = await ragService.generate(q, context, user.history.slice(-3));
-                response = rag.response;
-                report = rag.report;
-                console.log(`[BOT] RAG generation complete`);
             }
 
             finalResponses.push(response);
@@ -106,13 +116,14 @@ async function processQuery(ctx) {
         const finalResult = finalResponses.join('\n\n---\n\n');
 
         // 3. Update Session
-        user.history.push({ role: 'user', content: query });
-        user.history.push({ role: 'assistant', content: finalResult });
-        await userService.enroll(userId, user);
+        try {
+            user.history.push({ role: 'user', content: query });
+            user.history.push({ role: 'assistant', content: finalResult });
+            await userService.enroll(userId, user);
+        } catch (sessErr) { console.error('[BOT] Session Update Failed:', sessErr.message); }
 
         // 4. Log for Dashboard
         try {
-            console.log(`[BOT] Logging execution to dashboard database`);
             await retrievalService.connect();
             await retrievalService.db.collection('execution_logs').insertOne({
                 userId, query, response: finalResult,
@@ -120,29 +131,53 @@ async function processQuery(ctx) {
                 tokens: combinedReport.tokens,
                 timestamp: new Date()
             });
-            console.log(`[BOT] Execution logged`);
-        } catch (logErr) { console.error('Log save error:', logErr.message); }
+        } catch (logErr) { console.error('[BOT] Log Save Error:', logErr.message); }
 
-        console.log(`[BOT] Sending final reply to user ${userId}`);
-        await ctx.reply(finalResult);
-        console.log(`[BOT] Reply sent`);
+        console.log(`[BOT] Sending reply to ${userId} (Length: ${finalResult.length})`);
+        
+        // Partition message if too long for Telegram (4096 limit)
+        if (finalResult.length > 4000) {
+            const chunks = finalResult.match(/[\s\S]{1,4000}/g) || [];
+            for (const chunk of chunks) {
+                await ctx.reply(chunk);
+            }
+        } else {
+            await ctx.reply(finalResult);
+        }
+        
     } catch (e) {
-        console.error('Bot Error:', e);
-        ctx.reply("System encountered an error. Please try again.");
+        console.error('[BOT] Global Request Error:', e);
+        try {
+            await ctx.reply("The system is currently under heavy load or encountered a problem. Please try again in 1 minute.");
+        } catch (replyErr) { console.error('[BOT] Failed to send error message:', replyErr.message); }
     }
 }
 
+bot.catch((err, ctx) => {
+    console.error(`[TELEGRAF ERROR] Update ${ctx.updateType} caused error:`, err);
+    try {
+        ctx.reply("A system error occurred. Our engineers have been notified.");
+    } catch (e) {}
+});
+
 bot.start((ctx) => {
-    ctx.reply("Hi, I'm MSAJCE Assistant! What assistance do you need today?\n\n• Transport (Bus Routes & Timings)\n• Admission Details\n• Personnel & Contacts\n• Department Info");
+    ctx.reply("Hi, I'm MSAJCE Assistant! I'm live and ready to help.\n\n• Transport (Bus Routes & Timings)\n• Admission Details\n• Personnel & Contacts\n• Department Info");
 });
 
 bot.on('text', async (ctx) => {
     await processQuery(ctx);
 });
 
-bot.launch();
-console.log('MSAJCE Monorepo Bot Live...');
+bot.launch().then(() => {
+    console.log('MSAJCE Monorepo Bot Live & Listening...');
+}).catch(err => {
+    console.error('[BOT] Failed to launch:', err.message);
+    if (err.message.includes('409')) {
+        console.error('[BOT] CONFLICT: Another bot instance is already running with this token.');
+    }
+});
 
 // Clean shutdown
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
+
