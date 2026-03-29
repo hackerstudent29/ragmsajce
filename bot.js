@@ -15,9 +15,9 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-// Added at the top of the file for global stability
+// Global Error Prevention
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    console.error('[CRITICAL] Unhandled Rejection:', reason);
 });
 
 process.on('uncaughtException', (err) => {
@@ -33,87 +33,73 @@ async function processQuery(ctx) {
         await ctx.sendChatAction('typing');
 
         // 1. Session Memory & Pronoun Resolution
-        console.log(`[BOT] Fetching user session for ${userId}`);
         const user = await userService.getUser(userId) || { last_entity: null, history: [] };
         if (query.match(/\b(him|her|he|she|that person|them)\b/i) && user.last_entity) {
             query = query.replace(/\b(him|her|he|she|that person|them)\b/gi, user.last_entity);
             console.log(`[MEMORY] Resolved pronoun to: "${query}"`);
         }
 
-        // 2. Multi-Query Splitting
+        // 2. Parallel Processing for Multi-Queries
         const queries = retrievalService.splitQuery(query);
-        let finalResponses = [];
-        let combinedReport = { steps: ["Multi-Query Processing"], tokens: { reasoning: 0, formulation: 0 } };
+        const processingStartTime = Date.now();
+        const GLOBAL_TIMEOUT_MS = 25000;
 
-        for (let q of queries) {
+        const processSubQuery = async (q) => {
             let response = "";
             let report = { steps: [], tokens: { reasoning: 0, formulation: 0 } };
 
-            // Determine Domain & Route via centralized query understanding
+            const { intents } = retrievalService.detectIntent(q);
+            const isGreeting = intents.includes('GREETING');
             const isPerson = retrievalService.isPersonQuery(q);
             const isTransport = retrievalService.isTransportQuery(q);
             const isDept = retrievalService.isDeptQuery(q);
             const isMtc = q.match(/\b(mtc|public transport|333|555)\b/i);
 
-            console.log(`[BOT] Investigating "${q}" [P: ${isPerson}, T: ${isTransport}, D: ${isDept}, M: ${!!isMtc}]`);
+            if (isGreeting) return { response: "Hi! How can I help you with transport, admissions, or personnel info today?", report };
 
             if (isPerson) {
-                console.log(`[BOT] Calling handlePersonQuery`);
                 response = await retrievalService.handlePersonQuery(q);
-                if (response) {
-                    report.steps.push("Deterministic Person Match");
-                    const nameMatch = response.match(/Results for "(.*?)"/);
-                    if (nameMatch) user.last_entity = nameMatch[1];
-                }
+                if (response) report.steps.push("Deterministic Person Match");
             } else if (isDept) {
-                console.log(`[BOT] Calling handleDeptQuery`);
                 response = await retrievalService.handleDeptQuery(q);
                 if (response) report.steps.push("Deterministic Dept Match");
             } else if (isTransport) {
-                console.log(`[BOT] Calling handleTransportQuery`);
                 response = await retrievalService.handleTransportQuery(q);
                 if (response) report.steps.push("Deterministic Transport Match");
             } else if (isMtc) {
-                console.log(`[BOT] Calling handleMtcQuery`);
                 response = await retrievalService.handleMtcQuery(q);
                 if (response) report.steps.push("Deterministic MTC Match");
             }
 
-            // RAG Fallback
             if (!response) {
-                console.log(`[BOT] No deterministic match, falling back to RAG`);
-                report.steps.push("No Deterministic Match - Falling back to RAG");
-                
+                if (Date.now() - processingStartTime > GLOBAL_TIMEOUT_MS - 5000) return { response: "I'm sorry, I'm taking too long to find the best answer.", report };
                 try {
                     const context = await retrievalService.retrieve(q);
-                    console.log(`[BOT] Context: ${context.people.length} people, ${context.vectorMatches.length} knowledge items`);
-
-                    // Module 4: Feedback Loop
-                    if (context.people.length === 0 && (!context.routes || context.routes.length === 0) && context.vectorMatches.length === 0) {
-                        try {
-                            await retrievalService.connect();
-                            await retrievalService.db.collection('failed_queries').insertOne({
-                                query: q, userId, timestamp: new Date(), type: 'DATA_GAP'
-                            });
-                        } catch (e) {}
-                    }
-
                     const rag = await ragService.generate(q, context, user.history.slice(-3));
                     response = rag.response;
                     report = rag.report;
                 } catch (ragErr) {
                     console.error('[BOT] RAG Pipeline Error:', ragErr.message);
-                    response = "I encountered an error retrieving that information. Please try a simpler query.";
+                    response = "I encountered an error retrieving that information.";
                 }
             }
+            return { response, report };
+        };
 
-            finalResponses.push(response);
-            combinedReport.tokens.reasoning += (report.tokens?.reasoning || 0);
-            combinedReport.tokens.formulation += (report.tokens?.formulation || 0);
-            combinedReport.steps = [...combinedReport.steps, ...report.steps];
-        }
+        // Execution with Global Deadline
+        const results = await Promise.race([
+            Promise.all(queries.map(q => processSubQuery(q))),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Global Timeout')), GLOBAL_TIMEOUT_MS))
+        ]);
 
-        const finalResult = finalResponses.join('\n\n---\n\n');
+        const finalResult = results.map(r => r.response).join('\n\n---\n\n');
+        
+        // Merge tokens/steps for logging
+        const combinedReport = { steps: results.flatMap(r => r.report.steps), tokens: { reasoning: 0, formulation: 0 } };
+        results.forEach(r => {
+            combinedReport.tokens.reasoning += (r.report.tokens?.reasoning || 0);
+            combinedReport.tokens.formulation += (r.report.tokens?.formulation || 0);
+        });
 
         // 3. Update Session
         try {
@@ -133,14 +119,10 @@ async function processQuery(ctx) {
             });
         } catch (logErr) { console.error('[BOT] Log Save Error:', logErr.message); }
 
-        console.log(`[BOT] Sending reply to ${userId} (Length: ${finalResult.length})`);
-        
-        // Partition message if too long for Telegram (4096 limit)
+        // Send Final Result
         if (finalResult.length > 4000) {
             const chunks = finalResult.match(/[\s\S]{1,4000}/g) || [];
-            for (const chunk of chunks) {
-                await ctx.reply(chunk);
-            }
+            for (const chunk of chunks) await ctx.reply(chunk);
         } else {
             await ctx.reply(finalResult);
         }
@@ -148,20 +130,18 @@ async function processQuery(ctx) {
     } catch (e) {
         console.error('[BOT] Global Request Error:', e);
         try {
-            await ctx.reply("The system is currently under heavy load or encountered a problem. Please try again in 1 minute.");
-        } catch (replyErr) { console.error('[BOT] Failed to send error message:', replyErr.message); }
+            await ctx.reply("The system encountered a timeout or error. Please try a simpler query.");
+        } catch (replyErr) {}
     }
 }
 
 bot.catch((err, ctx) => {
-    console.error(`[TELEGRAF ERROR] Update ${ctx.updateType} caused error:`, err);
-    try {
-        ctx.reply("A system error occurred. Our engineers have been notified.");
-    } catch (e) {}
+    console.error(`[TELEGRAF ERROR] Update ${ctx.updateType}:`, err);
+    try { ctx.reply("A system error occurred. Please try again later."); } catch (e) {}
 });
 
 bot.start((ctx) => {
-    ctx.reply("Hi, I'm MSAJCE Assistant! I'm live and ready to help.\n\n• Transport (Bus Routes & Timings)\n• Admission Details\n• Personnel & Contacts\n• Department Info");
+    ctx.reply("Hi, I'm MSAJCE Assistant! I'm live and ready to help. Choose a category:\n\n• Transport (Bus Routes & Timings)\n• Admission Details\n• Personnel & Contacts\n• Department Info");
 });
 
 bot.on('text', async (ctx) => {
@@ -169,15 +149,11 @@ bot.on('text', async (ctx) => {
 });
 
 bot.launch().then(() => {
-    console.log('MSAJCE Monorepo Bot Live & Listening...');
+    console.log('MSAJCE Assistant Hybrid Live & Listening...');
 }).catch(err => {
     console.error('[BOT] Failed to launch:', err.message);
-    if (err.message.includes('409')) {
-        console.error('[BOT] CONFLICT: Another bot instance is already running with this token.');
-    }
 });
 
 // Clean shutdown
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
-

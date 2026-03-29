@@ -58,6 +58,8 @@ class RetrievalService {
     if (q.match(/\b(earliest|latest|first bus|last bus|how many|count|when does)\b/)) intents.push('COMPUTATION');
     // Facilities
     if (q.match(/\b(infra|library|hostel|canteen|auditorium|sports|lab)\b/)) intents.push('FACILITIES');
+    // Greetings / Politeness
+    if (q.match(/\b(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|bye|see you|hola)\b/)) intents.push('GREETING');
 
     return { intents: intents.length > 0 ? intents : ['GENERAL'] };
   }
