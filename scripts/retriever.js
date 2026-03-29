@@ -43,14 +43,21 @@ class Retriever {
         await this.connect();
         const normalizedQuery = query.toLowerCase().trim();
         
-        // Search in entities_master (people)
+        // Find people with exact or partial name matches
         const people = await this.db.collection('entities_master').find({
             $or: [
                 { normalized_name: { $regex: normalizedQuery, $options: 'i' } },
-                { aliases: { $in: [normalizedQuery] } },
-                { role: { $regex: normalizedQuery, $options: 'i' } }
+                { aliases: { $in: [normalizedQuery] } }
             ]
-        }).limit(5).toArray();
+        }).toArray();
+
+        // Classification & Deduplication
+        const classifiedPeople = people.map(p => {
+            let type = 'admin';
+            if (p.role?.toLowerCase().includes('student') || p.id.includes('student')) type = 'student';
+            if (p.role?.toLowerCase().includes('professor') || p.role?.toLowerCase().includes('hod') || p.role?.toLowerCase().includes('faculty')) type = 'faculty';
+            return { ...p, type };
+        });
 
         // Search in transport_routes
         const routes = await this.db.collection('transport_routes').find({
@@ -60,16 +67,7 @@ class Retriever {
             ]
         }).limit(3).toArray();
 
-        // If it's a specific route query like "AR-3", fetch details
-        if (normalizedQuery.match(/ar[-]?\d+|r[-]?\d+/)) {
-            const specificRoute = normalizedQuery.replace("-", " ").toUpperCase();
-            const details = await this.db.collection('transport_routes').findOne({
-                route_no: { $regex: specificRoute.split(" ").join("[-]?"), $options: 'i' }
-            });
-            if (details) routes.push(details);
-        }
-
-        return { people, routes };
+        return { people: classifiedPeople, routes };
     }
 
     async searchVectorStore(query) {

@@ -72,13 +72,15 @@ async function getFinalResponse(query, reasoning, context) {
             DATA: ${JSON.stringify(context)}
             
             LAWS:
-            1. DO NOT include "Additional" or "Also" information. 
-            2. If someone is a student, say they are a student.
-            3. If someone is a professor, say they are a professor.
-            4. If the question is about a person, DO NOT talk about bus routes or facilities.
-            5. FORMAT: Use only simple dashes (-) for bullet points.
-            6. STYLE: NO BOLD (**), NO ITALICS (_). USE PLAIN TEXT ONLY.
-            7. If you find multiple matches, list them briefly.
+            1. RESET CONTEXT: Treat every query independently. NO info leakage from previous people.
+            2. MULTI-RESULT HANDLING: If multiple people match, use this format for each:
+               - Name: [Name]
+                 Role: [Student/Faculty/Admin] ([Department/Batch])
+                 Details: [Mobile/Info]
+            3. DEDUPLICATION: Merge records if they describe the same person. Avoid repetition.
+            4. PRIORITY: If user specifies a role (eg: "principal"), return only that person.
+            5. FALLBACK: If no clear person matches, say "No matching person found".
+            6. STYLE: NO BOLD (**). NO ITALICS (_). DASH BULLETS (-). PLAIN TEXT ONLY.
         `;
         const result = await gemini.generateContent(prompt);
         return result.response.text();
@@ -107,7 +109,10 @@ bot.on('text', async (ctx) => {
 
         // Step 2: Session/History
         const sessionData = await getSession(userId);
-        const chatHistory = sessionData.history.slice(-5); // Last 5 messages
+        const queryLower = query.toLowerCase();
+        const hasReference = queryLower.includes('him') || queryLower.includes('her') || queryLower.includes('that') || queryLower.includes('they') || queryLower.includes('who is he');
+        
+        const chatHistory = hasReference ? (sessionData.history.slice(-5)) : [];
 
         // Step 3: Reasoning (Stage 1)
         const reasoning = await getReasoning(query, context, chatHistory);
