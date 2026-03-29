@@ -110,26 +110,39 @@ const runPipeline = async () => {
     fs.writeFileSync(path.join(__dirname, '../structured_data/mtc_routes.json'), JSON.stringify(mtc, null, 2));
     fs.writeFileSync(path.join(__dirname, '../structured_data/structured_data.json'), JSON.stringify(structured, null, 2));
 
-    // 5. Atomic File Storage (Part 10)
+    // 4. Global Analysis (Part 5) & Institutional Leaders
+    const structured = [
+        { name: 'Admissions Office', hod: 'Registrar', contact: '044-27470025', type: 'ADMIN' },
+        { name: 'Information Technology', code: 'IT', hod: 'Dr. Elliss Yogesh R', type: 'DEPT' },
+        { name: 'Computer Science', code: 'CSE', hod: 'Dr. Srinivasan', type: 'DEPT' },
+        { name: 'Transport Office', hod: 'Dr. K.P. Santhosh Nathan', contact: '98408 86992', type: 'ADMIN' }
+    ];
+
+    // Add HODs to People for Part 5 Routing
+    structured.forEach(s => {
+        if (s.hod && s.hod !== 'Registrar') {
+            people.push({
+                name: s.hod,
+                normalized_name: normalize(s.hod),
+                aliases: generateAliases(s.hod),
+                role: `HOD of ${s.name}`,
+                department: s.name,
+                type: 'FACULTY'
+            });
+        }
+    });
+
     const now = new Date();
-    
-    // Part 1, Step 8: Validation & Cleaning
     const validate = (list, requiredFields) => list.filter(item => {
         const isValid = requiredFields.every(f => item[f] && item[f].toString().trim().length > 0);
-        if (!isValid) console.warn('[VALIDATION] Skipping incomplete record:', item.name || item.route_no);
         return isValid;
     });
 
-    const structuredWithTime = [
-        { name: 'Admissions Office', hod: 'Registrar', contact: '044-27470025', type: 'ADMIN', last_updated: now },
-        { name: 'Information Technology', code: 'IT', hod: 'Dr. Elliss Yogesh R', type: 'DEPT', last_updated: now },
-        { name: 'Computer Science', code: 'CSE', hod: 'Dr. Srinivasan', type: 'DEPT', last_updated: now },
-        { name: 'Transport Office', hod: 'Dr. K.P. Santhosh Nathan', contact: '98408 86992', type: 'ADMIN', last_updated: now }
-    ];
-
     const peopleWithTime = validate(people, ['normalized_name']).map(p => ({ 
-        ...p, last_updated: now, aliases: [...new Set(p.aliases)] // Step 7: Valid Aliases
+        ...p, last_updated: now, aliases: [...new Set(p.aliases)]
     }));
+
+    // ... (rest of sync logic) ...
     const routesWithTime = validate(routes, ['route_no']).map(r => ({ ...r, last_updated: now }));
     const stopsWithTime = validate(stops, ['stop', 'route_no']).map(s => ({ ...s, last_updated: now }));
     const mtcWithTime = validate(mtc, ['route_no']).map(m => ({ ...m, last_updated: now }));
