@@ -123,7 +123,7 @@ class RetrievalService {
             const type = (p.type || '').toLowerCase();
             if (role.includes('principal') || role.includes('chairman')) return 100;
             if (role.includes('hod') || role.includes('head')) return 80;
-            if (role.includes('president') || type.includes('office_bearer')) return 70;
+            if (role.includes('president') || type.includes('office_bearer')) return 90;
             if (role.includes('secretary') || role.includes('treasurer')) return 65;
             if (type.includes('faculty') || type.includes('professor')) return 60;
             if (type.includes('student')) return 20;
@@ -149,13 +149,14 @@ class RetrievalService {
     if (people.length === 0) return null;
     people = this.rankPeople(people, personName);
 
-    const grouped = { admin: [], faculty: [], students: [], others: [] };
+    const grouped = { admin: [], faculty: [], bearers: [], students: [], others: [] };
     people.forEach(p => {
       const type = (p.type || '').toLowerCase();
       const role = (p.role || '').toLowerCase();
-      const entry = `- ${p.name}\n  Role: ${p.role || 'N/A'}${p.department ? ` (${p.department} Dept)` : ''}${p.mobile ? `\n  Contact: ${p.mobile}` : ''}`;
+      const entry = `- ${p.name}\n  Role: ${p.role || 'N/A'}${p.department ? ` (${p.department} Dept)` : ''}${p.batch ? `\n  Batch: ${p.batch}` : ''}${p.mobile ? `\n  Contact: ${p.mobile}` : ''}`;
       
       if (role.includes('principal') || role.includes('chairman') || role.includes('admin')) grouped.admin.push(entry);
+      else if (type.includes('office_bearer') || role.includes('president') || role.includes('secretary') || role.includes('treasurer')) grouped.bearers.push(entry);
       else if (type.includes('faculty') || type.includes('professor') || type.includes('staff')) grouped.faculty.push(entry);
       else if (type.includes('student')) grouped.students.push(entry);
       else grouped.others.push(entry);
@@ -163,6 +164,7 @@ class RetrievalService {
 
     let output = `Results for "${personName}":\n\n`;
     if (grouped.admin.length > 0) output += `ADMINISTRATION:\n${grouped.admin.join('\n\n')}\n\n`;
+    if (grouped.bearers.length > 0) output += `SOCIETY OFFICE BEARERS:\n${grouped.bearers.join('\n\n')}\n\n`;
     if (grouped.faculty.length > 0) output += `FACULTY & STAFF:\n${grouped.faculty.join('\n\n')}\n\n`;
     if (grouped.students.length > 0) output += `STUDENTS:\n${grouped.students.join('\n\n')}\n\n`;
     if (grouped.others.length > 0) output += `OTHER:\n${grouped.others.join('\n\n')}\n\n`;
