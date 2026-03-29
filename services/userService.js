@@ -12,7 +12,7 @@ class UserService {
   // --- ENROLLMENT & SECURITY ---
   async enroll(userId, userData) {
     try {
-      await axios.post(`${REDIS_URL}/set/user:${userId}`, JSON.stringify(userData), {
+      await axios.post(`${REDIS_URL}/set/user:${encodeURIComponent(userId)}`, JSON.stringify(userData), {
         headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
       });
       return { success: true };
@@ -21,7 +21,7 @@ class UserService {
 
   async getUser(userId) {
     try {
-      const res = await axios.get(`${REDIS_URL}/get/user:${userId}`, {
+      const res = await axios.get(`${REDIS_URL}/get/user:${encodeURIComponent(userId)}`, {
         headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
       });
       return res.data.result ? JSON.parse(res.data.result) : null;
@@ -32,7 +32,7 @@ class UserService {
   async sendOTP(email) {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     // Cache OTP for 5 mins
-    await axios.post(`${REDIS_URL}/setex/otp:${email}/300`, otp, {
+    await axios.post(`${REDIS_URL}/setex/otp:${encodeURIComponent(email)}/300`, otp, {
       headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
     });
     
@@ -43,7 +43,7 @@ class UserService {
 
   async verifyOTP(email, userInput) {
     try {
-      const res = await axios.get(`${REDIS_URL}/get/otp:${email}`, {
+      const res = await axios.get(`${REDIS_URL}/get/otp:${encodeURIComponent(email)}`, {
         headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
       });
       return res.data.result === userInput;

@@ -28,9 +28,22 @@ bot.on('text', async (ctx) => {
         const user = await userService.getUser(userId) || { history: [] };
         
         // 3. Reasoning & Formulation (RAG Service)
-        const response = await ragService.generate(query, context, user.history.slice(-5));
+        const { response, report } = await ragService.generate(query, context, user.history.slice(-5));
 
-        // 4. Update Persistence
+        // 4. Log the Execution Report (for Dashboard)
+        try {
+            await (await retrievalService.connect());
+            await retrievalService.db.collection('execution_logs').insertOne({
+                userId,
+                query,
+                response,
+                steps: report.steps,
+                tokens: report.tokens,
+                timestamp: new Date()
+            });
+        } catch (e) { console.error('Logging Error:', e.message); }
+
+        // 5. Update Persistence
         user.history.push({ role: 'user', content: query });
         user.history.push({ role: 'assistant', content: response });
         await userService.enroll(userId, user);

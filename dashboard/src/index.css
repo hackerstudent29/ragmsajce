@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #0088cc;
-  --color-surface: rgba(255, 255, 255, 0.1);
-  --color-glass: rgba(255, 255, 255, 0.05);
+  --color-brand: #2563eb; /* Strong Blue */
+  --color-surface: #ffffff;
+  --color-border: #e2e8f0;
+  --color-bg: #f8fafc;
 }
 
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  color-scheme: dark;
-  background-color: #030712;
+  color-scheme: light;
+  background-color: var(--color-bg);
+  color: #1e293b;
 }
 
 body {
@@ -19,10 +21,21 @@ body {
 }
 
 .glass-card {
-  background: var(--color-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  border-radius: 20px;
+  background: white;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.02);
+  border-radius: 16px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+.step-indicator {
+  @apply relative pl-6 border-l-2 border-slate-200;
+}
+
+.step-active {
+  @apply border-blue-500;
 }

@@ -27,7 +27,7 @@ class RetrievalService {
   // --- SMART TTL CACHING (Redis) ---
   async getCache(key) {
     try {
-      const res = await axios.get(`${REDIS_URL}/get/cache:${key}`, {
+      const res = await axios.get(`${REDIS_URL}/get/cache:${encodeURIComponent(key)}`, {
         headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
       });
       return res.data.result ? JSON.parse(res.data.result) : null;
@@ -36,7 +36,7 @@ class RetrievalService {
 
   async setCache(key, value) {
     try {
-      await axios.post(`${REDIS_URL}/setex/cache:${key}/${this.cacheTTL}`, JSON.stringify(value), {
+      await axios.post(`${REDIS_URL}/setex/cache:${encodeURIComponent(key)}/${this.cacheTTL}`, JSON.stringify(value), {
         headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
       });
     } catch (e) { console.error('Cache Store Error:', e.message); }

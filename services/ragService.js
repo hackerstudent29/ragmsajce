@@ -12,53 +12,56 @@ const gemini = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
 class RAGService {
     async generate(query, context, history = []) {
+        const report = { steps: [], tokens: { reasoning: 0, formulation: 0 } };
         try {
+            report.steps.push("Retrieval Successful");
+            
             // Stage 1: Reasoning (NVIDIA NIM)
-            const reasoning = await this.getReasoning(query, context, history);
+            report.steps.push("Identifying Intent & Reasoning (Llama 3.1 405B)");
+            const reasoningRes = await this.getReasoningResponse(query, context, history);
+            const reasoning = reasoningRes.content;
+            report.tokens.reasoning = reasoningRes.usage?.total_tokens || 0;
             
             // Stage 2: Formulation (Gemini)
-            const response = await this.getFinalResponse(query, reasoning, context);
+            report.steps.push("Generating Grounded Final Answer (Gemini 3 Flash)");
+            const finalRes = await this.getFinalResponse(query, reasoning, context);
+            const response = finalRes.text;
+            report.tokens.formulation = finalRes.usage?.totalTokens || 0;
             
-            return response;
+            report.steps.push("Response Delivered");
+            return { response, report };
         } catch (e) {
             console.error('RAG Generation Error:', e.message);
-            return "Internal error processing the reply. Please retry.";
+            return { response: "Internal error processing the reply. Please retry.", report };
         }
     }
 
-    async getReasoning(query, context, history) {
+    async getReasoningResponse(query, context, history) {
         try {
             const res = await axios.post('https://integrate.api.nvidia.com/v1/chat/completions', {
                 model: "meta/llama-3.1-405b-instruct",
                 messages: [
-                    { role: "system", content: "Reasoning Engine for MSAJCE. Analyze query, context, and history. Decide the factual output and avoid conflicts. Do not directly answer yet." },
+                    { role: "system", content: "Reasoning Engine for MSAJCE. Analyze query, context, and history. Decide the factual output." },
                     { role: "user", content: `Query: ${query}\n\nContext: ${JSON.stringify(context)}\n\nHistory: ${JSON.stringify(history)}` }
                 ],
                 temperature: 0.1
             }, {
                 headers: { 'Authorization': `Bearer ${NVIDIA_API_KEY}`, 'Content-Type': 'application/json' }
             });
-            return res.data.choices[0].message.content;
-        } catch (e) { return "Reasoning failed. Falling back to context."; }
+            return { content: res.data.choices[0].message.content, usage: res.data.usage };
+        } catch (e) { return { content: "Reasoning failed.", usage: { total_tokens: 0 } }; }
     }
 
     async getFinalResponse(query, reasoning, context) {
         const prompt = `
             You are MSAJCE Assistant. Strictly answer only based on DATA provided.
-            
             QUERY: ${query}
             REASONING: ${reasoning}
             DATA: ${JSON.stringify(context)}
-            
-            LAWS:
-            1. INDEPENDENT QUERY: Treat each question separately. No history leakage.
-            2. FORMAT: Dash bullets (-) only. No paragraphs.
-            3. STYLE: PLAIN TEXT ONLY. NO BOLD (**), NO ITALICS (_).
-            4. DISAMBIGUATION: If multiple matches, group them clearly (eg: Student vs Professor).
-            5. ONLY THE SPECIFIC QUESTION: Do not add extra details about others.
+            LAWS: Use plain text, dash bullets, no extra info.
         `;
         const result = await gemini.generateContent(prompt);
-        return result.response.text();
+        return { text: result.response.text(), usage: result.response.usageMetadata };
     }
 }
 
